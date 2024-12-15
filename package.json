@@ -6,7 +6,14 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "retr0lbb",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "tsx": "^4.19.2"
+  },
+  "dependencies": {
+    
+  }
 }
