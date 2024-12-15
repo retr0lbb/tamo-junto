@@ -17,6 +17,7 @@ model User{
   password String
   addressInfo String?
 
+  campaing Campaing[]
   Donations Donation[]
 }
 
@@ -38,6 +39,10 @@ model Campaing{
   name String
 
   donations Donation[]
+  milestones Milestone[]
+
+  User User? @relation(fields: [Userid], references: [id])
+  Userid String?
 }
 
 
@@ -55,6 +60,9 @@ model Milestone{
   minDonation Decimal
 
   prize Prize[]
+
+  Campaing Campaing? @relation(fields: [Campaingid], references: [id])
+  Campaingid String?
 }
 
 

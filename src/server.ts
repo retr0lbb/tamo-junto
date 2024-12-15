@@ -1,5 +1,6 @@
 import { fastify } from "fastify";
 import { createUserRoute } from "./routes/user/create-user";
+import { createCampaingRoute } from "./routes/campaing/create-campaing";
 
 const app = fastify();
 
@@ -8,6 +9,7 @@ app.get("/", (request, reply) => {
 });
 
 app.register(createUserRoute);
+app.register(createCampaingRoute);
 
 app
 	.listen({
