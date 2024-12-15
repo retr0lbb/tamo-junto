@@ -1,10 +1,13 @@
 import { fastify } from "fastify";
+import { createUserRoute } from "./routes/user/create-user";
 
 const app = fastify();
 
 app.get("/", (request, reply) => {
 	reply.send("Api funcionando com sucesso");
 });
+
+app.register(createUserRoute);
 
 app
 	.listen({
