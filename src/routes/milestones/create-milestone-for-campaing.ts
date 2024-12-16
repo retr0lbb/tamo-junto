@@ -33,10 +33,20 @@ export async function createMilestoneHandler(
 		return reply.status(404).send({ message: "Campaing not found" });
 	}
 
+	if (
+		objectiveAmmount >= campaing.goal.toNumber() ||
+		(minDonation !== null && minDonation >= campaing.goal.toNumber())
+	) {
+		return reply
+			.status(400)
+			.send({ message: "Objective cannot surpass campaing goal" });
+	}
+
 	const [milestone, donationsArray] = await Promise.all([
 		await prisma.milestone.findFirst({
 			where: {
 				objectiveAmmount: objectiveAmmount,
+				Campaingid: id,
 			},
 		}),
 		await prisma.donation.findMany({
@@ -49,26 +59,33 @@ export async function createMilestoneHandler(
 		}),
 	]);
 
-	if (milestone !== null) {
+	if (milestone) {
+		console.log(milestone);
 		return reply
 			.status(400)
 			.send({ message: "One milestone with this objective was founded" });
 	}
 
-	const totalCollectedValueOfCampaing = new PrismaClient.Decimal(0);
-
-	for (const donation in donationsArray) {
-		totalCollectedValueOfCampaing.plus(donation);
-	}
+	const totalCollectedValueOfCampaing = donationsArray.reduce(
+		(acc, donation) => {
+			return acc.plus(donation.donationAmmount);
+		},
+		new PrismaClient.Decimal(0),
+	);
 
 	if (
-		totalCollectedValueOfCampaing.comparedTo(objectiveAmmount) === 1 &&
-		!Number.isNaN(totalCollectedValueOfCampaing.comparedTo(objectiveAmmount))
+		totalCollectedValueOfCampaing.comparedTo(campaing.goal) === -1 ||
+		totalCollectedValueOfCampaing.comparedTo(campaing.goal) === 0
 	) {
 		return reply
 			.status(400)
 			.send({ message: "Campaing already collected more than milestone" });
 	}
+
+	console.log(
+		"Hey this is how much the campaing has arrecadated: ",
+		totalCollectedValueOfCampaing,
+	);
 
 	const milestoneResult = await prisma.milestone.create({
 		data: {

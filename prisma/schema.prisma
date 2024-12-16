@@ -33,7 +33,6 @@ model Donation{
   Campaingid String?
 }
 
-
 model Campaing{
   id String @id @default(uuid())
   name String
@@ -45,7 +44,6 @@ model Campaing{
   User User? @relation(fields: [Userid], references: [id])
   Userid String?
 }
-
 
 model Prize{
   id String @id @default(uuid())
