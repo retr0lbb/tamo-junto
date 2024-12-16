@@ -74,9 +74,11 @@ export async function createMilestoneHandler(
 	);
 
 	if (
-		totalCollectedValueOfCampaing.comparedTo(campaing.goal) === -1 ||
-		totalCollectedValueOfCampaing.comparedTo(campaing.goal) === 0
+		totalCollectedValueOfCampaing.comparedTo(objectiveAmmount) === 1 ||
+		totalCollectedValueOfCampaing.comparedTo(objectiveAmmount) === 0
 	) {
+		console.log(totalCollectedValueOfCampaing.comparedTo(objectiveAmmount));
+		console.log(totalCollectedValueOfCampaing, " ", objectiveAmmount);
 		return reply
 			.status(400)
 			.send({ message: "Campaing already collected more than milestone" });
