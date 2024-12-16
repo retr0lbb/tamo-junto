@@ -5,13 +5,15 @@ import z from "zod";
 export const createCampaingSchema = z.object({
 	userId: z.string().uuid(),
 	campaingName: z.string().nonempty(),
+	campaingObjectiveAmmount: z.number().positive(),
 });
 
 export async function createCampaingHandler(
 	request: FastifyRequest,
 	reply: FastifyReply,
 ) {
-	const { campaingName, userId } = createCampaingSchema.parse(request.body);
+	const { campaingName, userId, campaingObjectiveAmmount } =
+		createCampaingSchema.parse(request.body);
 
 	await prisma.user.findUniqueOrThrow({
 		where: {
@@ -23,6 +25,7 @@ export async function createCampaingHandler(
 		data: {
 			name: campaingName,
 			Userid: userId,
+			goal: campaingObjectiveAmmount,
 		},
 		select: { id: true, donations: true, milestones: true },
 	});

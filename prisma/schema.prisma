@@ -37,6 +37,7 @@ model Donation{
 model Campaing{
   id String @id @default(uuid())
   name String
+  goal Decimal
 
   donations Donation[]
   milestones Milestone[]
