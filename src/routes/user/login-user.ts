@@ -36,5 +36,3 @@ export async function loginUserHandler(
 export async function loginUserRoute(app: FastifyInstance) {
 	app.post("/login", loginUserHandler);
 }
-
-//semitoken eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjQ3YWQ4NTQzLWM3OGEtNGNkYS1hYTQ1LTE5YWI0YzIzOGUwNCIsImlhdCI6MTczNDQ3Nzc4N30.6RvadKkLdT_UhyRc5UqH7REhr-MQxnlTh8lXQPtrkz
