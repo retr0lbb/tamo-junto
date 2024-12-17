@@ -5,14 +5,17 @@ import { createMilestoneRoute } from "./routes/milestones/create-milestone-for-c
 import { createDonationRoute } from "./routes/donations/donate-to-campaing";
 import { getCampaingRoute } from "./routes/campaing/get-campaing";
 import { createPrizeRoute } from "./routes/prize/add-prize-to-milestone";
+import plugin from "./lib/jwt-plugin";
+import { loginUserRoute } from "./routes/user/login-user";
 
 const app = fastify();
-
+app.register(plugin);
 app.get("/", (request, reply) => {
 	reply.send("Api funcionando com sucesso");
 });
 
 app.register(createUserRoute);
+app.register(loginUserRoute);
 app.register(createCampaingRoute);
 app.register(createMilestoneRoute);
 app.register(createDonationRoute);

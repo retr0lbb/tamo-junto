@@ -1,7 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
 import { Prisma as PrismaClient } from "@prisma/client";
-import multipart from "@fastify/multipart";
 import z from "zod";
 
 export const createPrizeSchema = z.object({
