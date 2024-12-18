@@ -1,6 +1,5 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
-import { Prisma as PrismaClient } from "@prisma/client";
 import z from "zod";
 
 export const createPrizeSchema = z.object({
@@ -30,8 +29,6 @@ export async function createPrizeHandler(
 	if (!milestone) {
 		return reply.status(404).send({ message: "Milesonte not found" });
 	}
-
-	//logic to google bucket
 
 	const prize = await prisma.prize.create({
 		data: {

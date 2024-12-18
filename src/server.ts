@@ -7,6 +7,7 @@ import { getCampaingRoute } from "./routes/campaing/get-campaing";
 import { createPrizeRoute } from "./routes/prize/add-prize-to-milestone";
 import plugin from "./lib/jwt-plugin";
 import { loginUserRoute } from "./routes/user/login-user";
+import { listCampaingsRoute } from "./routes/campaing/list-campaings";
 
 const app = fastify();
 app.register(plugin);
@@ -21,6 +22,8 @@ app.register(createMilestoneRoute);
 app.register(createDonationRoute);
 app.register(getCampaingRoute);
 app.register(createPrizeRoute);
+app.register(listCampaingsRoute);
+
 app
 	.listen({
 		port: 3333,

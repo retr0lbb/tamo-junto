@@ -17,9 +17,11 @@ export async function getCampaingHandler(
 		where: {
 			id,
 		},
-		include: {
-			donations: true,
-			milestones: true,
+		select: {
+			goal: true,
+			id: true,
+			name: true,
+			Userid: true,
 		},
 	});
 
@@ -27,12 +29,22 @@ export async function getCampaingHandler(
 		return reply.status(404).send({ message: "Campaing not found" });
 	}
 
-	const totalCollectedValueOfCampaing = campaing.donations.reduce(
-		(acc, donation) => {
-			return acc.plus(donation.donationAmmount);
-		},
-		new PrismaClient.Decimal(0),
-	);
+	const [milestones, donations] = await Promise.all([
+		prisma.milestone.findMany({
+			where: {
+				Campaingid: id,
+			},
+		}),
+		prisma.donation.findMany({
+			where: {
+				Campaingid: id,
+			},
+		}),
+	]);
+
+	const totalCollectedValueOfCampaing = donations.reduce((acc, donation) => {
+		return acc.plus(donation.donationAmmount);
+	}, new PrismaClient.Decimal(0));
 
 	const percentageOfCompletion = (
 		(totalCollectedValueOfCampaing.toNumber() / campaing.goal.toNumber()) *
@@ -45,13 +57,22 @@ export async function getCampaingHandler(
 		goal: campaing.goal,
 		totalDonated: totalCollectedValueOfCampaing,
 		completion: percentageOfCompletion,
-		milestones: campaing.milestones.map((milestone) => {
+		milestones: milestones.map((milestone) => {
 			return {
 				milestonId: milestone.id,
 				target: milestone.objectiveAmmount,
 				minDonation: milestone.minDonation,
 			};
 		}),
+		donations: donations
+			? donations.map((donate) => {
+					return {
+						id: donate.id,
+						date: donate.donationDate,
+						ammount: donate.donationAmmount,
+					};
+				})
+			: [],
 	};
 
 	return reply.status(200).send({ data: betterCampaingObject });
