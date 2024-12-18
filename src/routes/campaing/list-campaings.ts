@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
 
 export async function listCampaingsHandler(
-	request: FastifyRequest,
+	_request: FastifyRequest,
 	reply: FastifyReply,
 ) {
 	const campaings = await prisma.campaing.findMany({

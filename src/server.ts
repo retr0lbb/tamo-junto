@@ -8,6 +8,7 @@ import { createPrizeRoute } from "./routes/prize/add-prize-to-milestone";
 import plugin from "./lib/jwt-plugin";
 import { loginUserRoute } from "./routes/user/login-user";
 import { listCampaingsRoute } from "./routes/campaing/list-campaings";
+import { deleteCampaingRoute } from "./routes/campaing/end-campaing";
 
 const app = fastify();
 app.register(plugin);
@@ -23,6 +24,7 @@ app.register(createDonationRoute);
 app.register(getCampaingRoute);
 app.register(createPrizeRoute);
 app.register(listCampaingsRoute);
+app.register(deleteCampaingRoute);
 
 app
 	.listen({
