@@ -1,21 +1,8 @@
-import {
-	fastify,
-	type FastifyInstance,
-	type FastifyReply,
-	type FastifyRequest,
-} from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
 import { Prisma as PrismaClient } from "@prisma/client";
+import { requestUser } from "../../lib/request-user-jwt";
 import z from "zod";
-
-declare module "fastify" {
-	interface FastifyInstance {
-		authenticate: (
-			request: FastifyRequest,
-			reply: FastifyReply,
-		) => Promise<void>;
-	}
-}
 
 export const createDonationSchema = z.object({
 	donationAmmount: z.number().positive().nonnegative().min(0.01),
@@ -23,17 +10,14 @@ export const createDonationSchema = z.object({
 const createDonationRouteParams = z.object({
 	id: z.string().uuid(),
 });
-const requestUser = z.object({
-	id: z.string().uuid(),
-	iat: z.number(),
-});
 
 export async function createDonationHandler(
 	request: FastifyRequest,
 	reply: FastifyReply,
 ) {
 	const { donationAmmount } = createDonationSchema.parse(request.body);
-	const userId = requestUser.parse(request.user).id;
+	const { iat, id: userId } = requestUser.parse(request.user);
+
 	const { id } = createDonationRouteParams.parse(request.params);
 
 	const campaing = await prisma.campaing.findUnique({
