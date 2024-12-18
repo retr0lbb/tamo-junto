@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
 import { Prisma as PrismaClient } from "@prisma/client";
 import z from "zod";
+import { requestUser } from "../../lib/request-user-jwt";
 
 export const createMilestoneSchema = z.object({
 	objectiveAmmount: z.number().positive(),
@@ -16,6 +17,7 @@ export async function createMilestoneHandler(
 	reply: FastifyReply,
 ) {
 	const { id } = createMilestoneRouteParams.parse(request.params);
+	const { id: userId } = requestUser.parse(request.user);
 	const { minDonation, objectiveAmmount } = createMilestoneSchema.parse(
 		request.body,
 	);
@@ -31,6 +33,13 @@ export async function createMilestoneHandler(
 
 	if (!campaing) {
 		return reply.status(404).send({ message: "Campaing not found" });
+	}
+
+	if (campaing.Userid !== userId) {
+		return reply.status(403).send({
+			message:
+				"You could not create a milestone on an Campaing thats not yours",
+		});
 	}
 
 	if (
@@ -103,5 +112,11 @@ export async function createMilestoneHandler(
 }
 
 export async function createMilestoneRoute(app: FastifyInstance) {
-	app.post("/campaing/:id/milestone", createMilestoneHandler);
+	app.post(
+		"/campaing/:id/milestone",
+		{
+			onRequest: [app.authenticate],
+		},
+		createMilestoneHandler,
+	);
 }

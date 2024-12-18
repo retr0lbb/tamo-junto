@@ -16,7 +16,7 @@ export async function createDonationHandler(
 	reply: FastifyReply,
 ) {
 	const { donationAmmount } = createDonationSchema.parse(request.body);
-	const { iat, id: userId } = requestUser.parse(request.user);
+	const { id: userId } = requestUser.parse(request.user);
 
 	const { id } = createDonationRouteParams.parse(request.params);
 
@@ -28,6 +28,12 @@ export async function createDonationHandler(
 
 	if (!campaing) {
 		return reply.status(404).send({ message: "Campaing not found" });
+	}
+
+	if (campaing.Userid === userId) {
+		return reply
+			.status(403)
+			.send({ message: "You cannot donate to your own campaing" });
 	}
 
 	const donationsArray = await prisma.donation.findMany({

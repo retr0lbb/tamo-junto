@@ -1,9 +1,9 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
 import z from "zod";
+import { requestUser } from "../../lib/request-user-jwt";
 
 export const createCampaingSchema = z.object({
-	userId: z.string().uuid(),
 	campaingName: z.string().nonempty(),
 	campaingObjectiveAmmount: z.number().positive(),
 });
@@ -12,8 +12,10 @@ export async function createCampaingHandler(
 	request: FastifyRequest,
 	reply: FastifyReply,
 ) {
-	const { campaingName, userId, campaingObjectiveAmmount } =
-		createCampaingSchema.parse(request.body);
+	const { campaingName, campaingObjectiveAmmount } = createCampaingSchema.parse(
+		request.body,
+	);
+	const { id: userId } = requestUser.parse(request.user);
 
 	await prisma.user.findUniqueOrThrow({
 		where: {
@@ -36,5 +38,11 @@ export async function createCampaingHandler(
 }
 
 export async function createCampaingRoute(app: FastifyInstance) {
-	app.post("/campaing", createCampaingHandler);
+	app.post(
+		"/campaing",
+		{
+			onRequest: [app.authenticate],
+		},
+		createCampaingHandler,
+	);
 }
