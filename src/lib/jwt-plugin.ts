@@ -4,7 +4,12 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { env } from "./env";
 
 export default fp(async (app) => {
-	app.register(jwt, { secret: env.TOKEN_SECRET });
+	app.register(jwt, {
+		secret: env.TOKEN_SECRET,
+		sign: {
+			expiresIn: "7d",
+		},
+	});
 
 	app.decorate(
 		"authenticate",

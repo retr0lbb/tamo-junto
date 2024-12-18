@@ -70,14 +70,6 @@ export async function createDonationHandler(
 		},
 	});
 
-	CampaingEvent.emitMilestoneAchieved({
-		Campaingid: campaing.id,
-		id: "some",
-		minDonation: 11,
-		objectiveAmmount: 1000,
-		prize: [],
-	});
-
 	reply
 		.status(201)
 		.send({ message: "donation computed with sucess", data: donation });
