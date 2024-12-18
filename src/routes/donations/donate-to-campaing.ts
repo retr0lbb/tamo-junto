@@ -3,6 +3,7 @@ import { prisma } from "../../lib/prisma";
 import { Prisma as PrismaClient } from "@prisma/client";
 import { requestUser } from "../../lib/request-user-jwt";
 import z from "zod";
+import CampaingEvent from "../../events/emiters/campaing.events";
 
 export const createDonationSchema = z.object({
 	donationAmmount: z.number().positive().nonnegative().min(0.01),
@@ -67,6 +68,14 @@ export async function createDonationHandler(
 			Campaingid: id,
 			Userid: userId,
 		},
+	});
+
+	CampaingEvent.emitMilestoneAchieved({
+		Campaingid: campaing.id,
+		id: "some",
+		minDonation: 11,
+		objectiveAmmount: 1000,
+		prize: [],
 	});
 
 	reply
