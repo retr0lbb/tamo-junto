@@ -3,7 +3,8 @@ import { prisma } from "../../lib/prisma";
 import { Prisma as PrismaClient } from "@prisma/client";
 import { requestUser } from "../../lib/request-user-jwt";
 import z from "zod";
-import CampaingEvent from "../../events/emiters/campaing.events";
+import { Campaing } from "../../models/campaing.model";
+import donationEvent from "../../events/emiters/donation.events";
 
 export const createDonationSchema = z.object({
 	donationAmmount: z.number().positive().nonnegative().min(0.01),
@@ -21,11 +22,7 @@ export async function createDonationHandler(
 
 	const { id } = createDonationRouteParams.parse(request.params);
 
-	const campaing = await prisma.campaing.findUnique({
-		where: {
-			id,
-		},
-	});
+	const campaing = await Campaing.verifyIfCampaingExists(prisma, { id });
 
 	if (!campaing) {
 		return reply.status(404).send({ message: "Campaing not found" });
@@ -70,9 +67,15 @@ export async function createDonationHandler(
 		},
 	});
 
-	reply
-		.status(201)
-		.send({ message: "donation computed with sucess", data: donation });
+	donationEvent.emitCheckIfMilestoneIsCompleted(
+		campaing.id,
+		totalCollectedValueOfCampaing.toNumber() + donationAmmount,
+	);
+
+	reply.status(201).send({
+		message: "donation computed with sucess",
+		data: donation,
+	});
 }
 
 export async function createDonationRoute(app: FastifyInstance) {

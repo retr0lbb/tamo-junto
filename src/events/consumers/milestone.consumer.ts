@@ -1,15 +1,44 @@
-import type { Milestone } from "../emiters/campaing.events";
+import { prisma } from "../../lib/prisma";
 import { messageBroker } from "../message-broker";
 
 class MilestoneConsumer {
 	constructor() {
-		messageBroker.on("milestone-achived", () =>
-			console.log("hey this milestone was achived"),
+		console.log("this listener is ready to recive messages");
+		messageBroker.on(
+			"check-milestone-completion",
+			async (data: { campaingId: string; totalDonatedValue: number }) => {
+				await this.verifyIfMilestoneIsAchived({
+					campaingId: data.campaingId,
+					totalDonationValue: data.totalDonatedValue,
+				});
+			},
 		);
 	}
 
-	private handleMilestoneAchieved(event: Milestone) {
-		console.log(`milestone with id ${event.id} achieved`);
+	private async verifyIfMilestoneIsAchived({
+		campaingId,
+		totalDonationValue,
+	}: { campaingId: string; totalDonationValue: number }) {
+		try {
+			const milestonesInOrderOfCompletion = await prisma.milestone.findMany({
+				where: {
+					Campaingid: campaingId,
+					isCompleted: false,
+				},
+				orderBy: {
+					objectiveAmmount: "asc",
+				},
+			});
+
+			if (
+				totalDonationValue >=
+				milestonesInOrderOfCompletion[0].objectiveAmmount.toNumber()
+			) {
+				console.log("Hey this milestone is completede shorty");
+			}
+		} catch (error) {
+			throw new Error("an error occured");
+		}
 	}
 }
 

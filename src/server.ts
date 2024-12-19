@@ -10,6 +10,7 @@ import { loginUserRoute } from "./routes/user/login-user";
 import { listCampaingsRoute } from "./routes/campaing/list-campaings";
 import { deleteCampaingRoute } from "./routes/campaing/end-campaing";
 import { updateCampaingRoute } from "./routes/campaing/update-campaing";
+import "./events/consumers/milestone.consumer";
 
 const app = fastify();
 app.register(plugin);

@@ -19,6 +19,8 @@ model User{
 
   campaing Campaing[]
   Donations Donation[]
+
+  UserAchievedMilestone UserAchievedMilestone[]
 }
 
 model Donation{
@@ -60,11 +62,26 @@ model Milestone{
   id String @id @default(uuid())
   objectiveAmmount Decimal
   minDonation Decimal
+  isCompleted Boolean @default(false)
 
   prize Prize[]
 
   Campaing Campaing? @relation(fields: [Campaingid], references: [id])
   Campaingid String?
+
+  UserAchievedMilestone UserAchievedMilestone[]
+}
+
+
+model UserAchievedMilestone{
+  id String @id @default(uuid())
+  achivedMilestoneAtDate DateTime @default(now())
+
+  User User? @relation(fields: [Userid], references: [id])
+  Userid String?
+
+  Milestone Milestone? @relation(fields: [Milestoneid], references: [id])
+  Milestoneid String?
 }
 
 
