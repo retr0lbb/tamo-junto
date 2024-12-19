@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
 import z from "zod";
 import { Prisma as PrismaClient } from "@prisma/client";
+import { Campaing } from "../../models/campaing.model";
 
 const getCampaingRouteParams = z.object({
 	id: z.string().uuid(),
@@ -13,18 +14,7 @@ export async function getCampaingHandler(
 ) {
 	const { id } = getCampaingRouteParams.parse(request.params);
 
-	const campaing = await prisma.campaing.findUnique({
-		where: {
-			id,
-		},
-		select: {
-			goal: true,
-			id: true,
-			name: true,
-			Userid: true,
-		},
-	});
-
+	const campaing = await Campaing.getCampaing(prisma, { id });
 	if (!campaing) {
 		return reply.status(404).send({ message: "Campaing not found" });
 	}

@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
 import z from "zod";
 import { requestUser } from "../../lib/request-user-jwt";
+import { Campaing } from "../../models/campaing.model";
 
 const updateCampaingRouteParams = z.object({
 	id: z.string().uuid(),
@@ -9,7 +10,7 @@ const updateCampaingRouteParams = z.object({
 
 const updateCampaingSchema = z.object({
 	name: z.string(),
-	goal: z.string(),
+	goal: z.number(),
 });
 
 export async function updateCampaingHandler(
@@ -20,11 +21,7 @@ export async function updateCampaingHandler(
 	const { id: userId } = requestUser.parse(request.user);
 	const { goal, name } = updateCampaingSchema.parse(request.body);
 
-	const campaing = await prisma.campaing.findUnique({
-		where: {
-			id,
-		},
-	});
+	const campaing = await Campaing.verifyIfCampaingExists(prisma, { id });
 
 	if (!campaing) {
 		return reply.status(404).send({ message: "Campaing not found" });
@@ -36,14 +33,10 @@ export async function updateCampaingHandler(
 			.send({ message: "Only the creator of this campaing can update it" });
 	}
 
-	const result = await prisma.campaing.update({
-		where: {
-			id,
-		},
-		data: {
-			goal,
-			name,
-		},
+	const result = await Campaing.updateCampaing(prisma, {
+		goal,
+		id,
+		name,
 	});
 
 	return reply

@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
 import z from "zod";
 import { requestUser } from "../../lib/request-user-jwt";
+import { Campaing } from "../../models/campaing.model";
 
 const deleteCampaingRouteParams = z.object({
 	id: z.string().uuid(),
@@ -30,13 +31,10 @@ export async function deleteCampaingHandler(
 			.send({ message: "Only the creator of this campaing can delete it" });
 	}
 
-	const result = await prisma.campaing.delete({
-		where: {
-			id,
-		},
-	});
-
-	return reply.status(200).send({ message: "your campaing was deleted" });
+	const result = await Campaing.deleteCampaing(prisma, { id });
+	return reply
+		.status(200)
+		.send({ message: "your campaing was deleted", data: result });
 }
 
 export async function deleteCampaingRoute(app: FastifyInstance) {

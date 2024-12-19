@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
 import z from "zod";
 import { requestUser } from "../../lib/request-user-jwt";
+import { Campaing } from "../../models/campaing.model";
 
 export const createCampaingSchema = z.object({
 	campaingName: z.string().nonempty(),
@@ -23,13 +24,10 @@ export async function createCampaingHandler(
 		},
 	});
 
-	const campaing = await prisma.campaing.create({
-		data: {
-			name: campaingName,
-			Userid: userId,
-			goal: campaingObjectiveAmmount,
-		},
-		select: { id: true, donations: true, milestones: true },
+	const campaing = await Campaing.insertCampainginDb(prisma, {
+		goal: campaingObjectiveAmmount,
+		name: campaingName,
+		Userid: userId,
 	});
 
 	return reply
