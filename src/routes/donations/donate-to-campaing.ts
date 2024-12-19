@@ -72,7 +72,7 @@ export async function createDonationHandler(
 		totalCollectedValueOfCampaing.toNumber() + donationAmmount,
 	);
 
-	reply.status(201).send({
+	return reply.status(201).send({
 		message: "donation computed with sucess",
 		data: donation,
 	});

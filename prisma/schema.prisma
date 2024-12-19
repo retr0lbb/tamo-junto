@@ -82,6 +82,8 @@ model UserAchievedMilestone{
 
   Milestone Milestone? @relation(fields: [Milestoneid], references: [id])
   Milestoneid String?
+
+  @@unique([Userid, Milestoneid], name: "unique_user_milestone")
 }
 
 

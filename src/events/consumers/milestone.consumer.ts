@@ -20,6 +20,7 @@ class MilestoneConsumer {
 		totalDonationValue,
 	}: { campaingId: string; totalDonationValue: number }) {
 		try {
+			console.log("Objected Recived message");
 			const milestonesInOrderOfCompletion = await prisma.milestone.findMany({
 				where: {
 					Campaingid: campaingId,
@@ -34,7 +35,52 @@ class MilestoneConsumer {
 				totalDonationValue >=
 				milestonesInOrderOfCompletion[0].objectiveAmmount.toNumber()
 			) {
-				console.log("Hey this milestone is completede shorty");
+				const donators = await prisma.user.findMany({
+					where: {
+						Donations: {
+							some: {
+								Campaingid: campaingId,
+							},
+						},
+					},
+					include: {
+						Donations: true,
+					},
+				});
+
+				donators.map(async (donator) => {
+					const userDonationValue = donator.Donations.reduce(
+						(acc, item) => acc + item.donationAmmount.toNumber(),
+						0,
+					);
+
+					if (
+						userDonationValue >=
+						milestonesInOrderOfCompletion[0].minDonation.toNumber()
+					) {
+						const result = await prisma.userAchievedMilestone.create({
+							data: {
+								Milestoneid: milestonesInOrderOfCompletion[0].id,
+								Userid: donator.id,
+							},
+						});
+
+						console.log(result);
+					}
+				});
+
+				await prisma.milestone.update({
+					data: {
+						isCompleted: true,
+					},
+					where: {
+						id: milestonesInOrderOfCompletion[0].id,
+					},
+				});
+
+				console.log(
+					`A milestone ${milestonesInOrderOfCompletion[0].id} esta completa e nao aceita mais doacoes`,
+				);
 			}
 		} catch (error) {
 			throw new Error("an error occured");
