@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
 import z from "zod";
+import { UserModel } from "../../models/user.model";
 
 export const loginUserSchema = z.object({
 	email: z.string().email(),
@@ -14,20 +15,7 @@ export async function loginUserHandler(
 ) {
 	const { email, password } = loginUserSchema.parse(request.body);
 
-	const user = await prisma.user.findUnique({
-		where: {
-			email: email,
-		},
-	});
-
-	if (!user) {
-		return reply.status(404).send({ message: "User not found" });
-	}
-
-	if (password !== user.password) {
-		return reply.status(400).send({ message: "Password or email didnt match" });
-	}
-
+	const user = await UserModel.logInUser(prisma, { email, password });
 	const token = this.jwt.sign({ id: user.id });
 
 	return reply.status(200).send({ token });

@@ -1,4 +1,11 @@
 import type { PrismaClient } from "@prisma/client";
+import { compare } from "bcrypt";
+interface UserInterface {
+	addressInfo: string | null;
+	email: string;
+	name: string;
+	password: string;
+}
 
 // biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class UserModel {
@@ -41,5 +48,57 @@ export class UserModel {
 		}
 
 		return donations;
+	}
+
+	static async createUser(
+		db: PrismaClient,
+		{ addressInfo, email, name, password }: UserInterface,
+	) {
+		const isUserInDatabaseAlready = await db.user.findUnique({
+			where: {
+				email,
+			},
+		});
+
+		if (isUserInDatabaseAlready !== null) {
+			throw new Error("User already exists");
+		}
+
+		const insertedUser = await db.user.create({
+			data: {
+				email,
+				name,
+				password,
+				addressInfo: addressInfo ? addressInfo : null,
+			},
+			select: {
+				id: true,
+			},
+		});
+
+		return insertedUser;
+	}
+
+	static async logInUser(
+		db: PrismaClient,
+		{ email, password }: Omit<UserInterface, "addressInfo" | "name">,
+	) {
+		const user = await db.user.findUnique({
+			where: {
+				email: email,
+			},
+		});
+
+		if (!user) {
+			throw new Error("User not found");
+		}
+
+		const match = await compare(password, user.password);
+
+		if (match === false) {
+			throw new Error("Password Didnt match");
+		}
+
+		return user;
 	}
 }

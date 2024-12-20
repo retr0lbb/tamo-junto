@@ -1,6 +1,8 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
 import z from "zod";
+import { hash } from "bcrypt";
+import { UserModel } from "../../models/user.model";
 
 export const createUserSchema = z.object({
 	name: z.string().nonempty({ message: "A name must be provided" }),
@@ -20,26 +22,13 @@ export async function createUserHandler(
 		request.body,
 	);
 
-	const isUserInDatabaseAlready = await prisma.user.findUnique({
-		where: {
-			email,
-		},
-	});
+	const rashPassword = await hash(password, 10);
 
-	if (isUserInDatabaseAlready !== null) {
-		return reply.status(400).send({ message: "User Already registered." });
-	}
-
-	const insertedUser = await prisma.user.create({
-		data: {
-			email,
-			name,
-			password,
-			addressInfo: addressInfo ? addressInfo : null,
-		},
-		select: {
-			id: true,
-		},
+	const insertedUser = await UserModel.createUser(prisma, {
+		addressInfo,
+		email,
+		name,
+		password: rashPassword,
 	});
 
 	const token = this.jwt.sign({ id: insertedUser.id });
