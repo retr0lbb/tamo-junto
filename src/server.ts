@@ -12,6 +12,7 @@ import { updateCampaingRoute } from "./routes/campaing/update-campaing";
 import { getMilestoneWinnersRoute } from "./routes/milestones/get-milestone-winners";
 import plugin from "./lib/jwt-plugin";
 import "./events/consumers/milestone.consumer";
+import { getUserDonatiosRoute } from "./routes/user/get-user-donations";
 
 const app = fastify();
 app.register(plugin);
@@ -30,6 +31,7 @@ app.register(listCampaingsRoute);
 app.register(deleteCampaingRoute);
 app.register(updateCampaingRoute);
 app.register(getMilestoneWinnersRoute);
+app.register(getUserDonatiosRoute);
 
 app
 	.listen({

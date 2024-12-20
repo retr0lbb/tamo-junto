@@ -30,7 +30,7 @@ class MilestoneConsumer {
 				},
 			});
 
-			if (!milestonesInOrderOfCompletion) {
+			if (milestonesInOrderOfCompletion.length <= 0) {
 				return;
 			}
 			if (milestonesInOrderOfCompletion[0].isCompleted === true) {
