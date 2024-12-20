@@ -13,12 +13,15 @@ import { getMilestoneWinnersRoute } from "./routes/milestones/get-milestone-winn
 import plugin from "./lib/jwt-plugin";
 import "./events/consumers/milestone.consumer";
 import { getUserDonatiosRoute } from "./routes/user/get-user-donations";
+import { ErrorHandler } from "./_errors/error-handler";
 
 const app = fastify();
 app.register(plugin);
 app.get("/", (request, reply) => {
 	reply.send("Api funcionando com sucesso");
 });
+
+app.setErrorHandler(ErrorHandler);
 
 app.register(createUserRoute);
 app.register(loginUserRoute);

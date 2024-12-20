@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import { compare } from "bcrypt";
+import { ClientError } from "../_errors/ClientError";
 interface UserInterface {
 	addressInfo: string | null;
 	email: string;
@@ -96,7 +97,7 @@ export class UserModel {
 		const match = await compare(password, user.password);
 
 		if (match === false) {
-			throw new Error("Password Didnt match");
+			throw new ClientError("Password didn't match!");
 		}
 
 		return user;
