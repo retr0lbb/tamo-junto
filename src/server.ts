@@ -5,11 +5,12 @@ import { createMilestoneRoute } from "./routes/milestones/create-milestone-for-c
 import { createDonationRoute } from "./routes/donations/donate-to-campaing";
 import { getCampaingRoute } from "./routes/campaing/get-campaing";
 import { createPrizeRoute } from "./routes/prize/add-prize-to-milestone";
-import plugin from "./lib/jwt-plugin";
 import { loginUserRoute } from "./routes/user/login-user";
 import { listCampaingsRoute } from "./routes/campaing/list-campaings";
 import { deleteCampaingRoute } from "./routes/campaing/end-campaing";
 import { updateCampaingRoute } from "./routes/campaing/update-campaing";
+import { getMilestoneWinnersRoute } from "./routes/milestones/get-milestone-winners";
+import plugin from "./lib/jwt-plugin";
 import "./events/consumers/milestone.consumer";
 
 const app = fastify();
@@ -28,6 +29,7 @@ app.register(createPrizeRoute);
 app.register(listCampaingsRoute);
 app.register(deleteCampaingRoute);
 app.register(updateCampaingRoute);
+app.register(getMilestoneWinnersRoute);
 
 app
 	.listen({

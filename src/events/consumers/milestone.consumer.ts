@@ -20,7 +20,6 @@ class MilestoneConsumer {
 		totalDonationValue,
 	}: { campaingId: string; totalDonationValue: number }) {
 		try {
-			console.log("Objected Recived message");
 			const milestonesInOrderOfCompletion = await prisma.milestone.findMany({
 				where: {
 					Campaingid: campaingId,
@@ -30,6 +29,13 @@ class MilestoneConsumer {
 					objectiveAmmount: "asc",
 				},
 			});
+
+			if (!milestonesInOrderOfCompletion) {
+				return;
+			}
+			if (milestonesInOrderOfCompletion[0].isCompleted === true) {
+				return;
+			}
 
 			if (
 				totalDonationValue >=
@@ -64,8 +70,6 @@ class MilestoneConsumer {
 								Userid: donator.id,
 							},
 						});
-
-						console.log(result);
 					}
 				});
 
@@ -77,10 +81,6 @@ class MilestoneConsumer {
 						id: milestonesInOrderOfCompletion[0].id,
 					},
 				});
-
-				console.log(
-					`A milestone ${milestonesInOrderOfCompletion[0].id} esta completa e nao aceita mais doacoes`,
-				);
 			}
 		} catch (error) {
 			throw new Error("an error occured");

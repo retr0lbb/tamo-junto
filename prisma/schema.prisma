@@ -31,7 +31,7 @@ model Donation{
   User User? @relation(fields: [Userid], references: [id])
   Userid String?
 
-  Campaing Campaing? @relation(fields: [Campaingid], references: [id])
+  Campaing Campaing? @relation(fields: [Campaingid], references: [id], onDelete: SetNull)
   Campaingid String?
 }
 
@@ -43,7 +43,7 @@ model Campaing{
   donations Donation[]
   milestones Milestone[]
 
-  User User? @relation(fields: [Userid], references: [id])
+  User User? @relation(fields: [Userid], references: [id], onDelete: SetNull)
   Userid String?
 }
 
@@ -54,7 +54,7 @@ model Prize{
   isShippingPrize Boolean @default(false)
   uri String
 
-  Milestone Milestone? @relation(fields: [Milestoneid], references: [id])
+  Milestone Milestone? @relation(fields: [Milestoneid], references: [id], onDelete: Cascade)
   Milestoneid String?
 }
 
@@ -66,7 +66,7 @@ model Milestone{
 
   prize Prize[]
 
-  Campaing Campaing? @relation(fields: [Campaingid], references: [id])
+  Campaing Campaing? @relation(fields: [Campaingid], references: [id], onDelete: Cascade)
   Campaingid String?
 
   UserAchievedMilestone UserAchievedMilestone[]
@@ -77,10 +77,10 @@ model UserAchievedMilestone{
   id String @id @default(uuid())
   achivedMilestoneAtDate DateTime @default(now())
 
-  User User? @relation(fields: [Userid], references: [id])
+  User User? @relation(fields: [Userid], references: [id], onDelete: SetNull)
   Userid String?
 
-  Milestone Milestone? @relation(fields: [Milestoneid], references: [id])
+  Milestone Milestone? @relation(fields: [Milestoneid], references: [id], onDelete: Cascade)
   Milestoneid String?
 
   @@unique([Userid, Milestoneid], name: "unique_user_milestone")
