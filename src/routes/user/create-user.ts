@@ -12,6 +12,7 @@ export const createUserSchema = z.object({
 });
 
 export async function createUserHandler(
+	this: FastifyInstance,
 	request: FastifyRequest,
 	reply: FastifyReply,
 ) {
@@ -41,9 +42,11 @@ export async function createUserHandler(
 		},
 	});
 
+	const token = this.jwt.sign({ id: insertedUser.id });
+
 	return reply
 		.status(201)
-		.send({ message: "User created sucessfully", data: insertedUser });
+		.send({ message: "User created sucessfully", data: token });
 }
 
 export async function createUserRoute(app: FastifyInstance) {

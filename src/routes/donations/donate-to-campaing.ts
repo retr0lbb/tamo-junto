@@ -51,8 +51,9 @@ export async function createDonationHandler(
 	);
 
 	if (
-		totalCollectedValueOfCampaing.comparedTo(campaing.goal) === 1 ||
-		totalCollectedValueOfCampaing.comparedTo(campaing.goal) === 0
+		totalCollectedValueOfCampaing
+			.plus(donationAmmount)
+			.comparedTo(campaing.goal) === 1
 	) {
 		return reply
 			.status(400)

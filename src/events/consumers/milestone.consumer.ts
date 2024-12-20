@@ -83,6 +83,7 @@ class MilestoneConsumer {
 				});
 			}
 		} catch (error) {
+			console.log(error);
 			throw new Error("an error occured");
 		}
 	}

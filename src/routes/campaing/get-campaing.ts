@@ -3,6 +3,7 @@ import { prisma } from "../../lib/prisma";
 import z from "zod";
 import { Prisma as PrismaClient } from "@prisma/client";
 import { Campaing } from "../../models/campaing.model";
+import { Milestone } from "../../models/milestone.model";
 
 const getCampaingRouteParams = z.object({
 	id: z.string().uuid(),
@@ -20,11 +21,7 @@ export async function getCampaingHandler(
 	}
 
 	const [milestones, donations] = await Promise.all([
-		prisma.milestone.findMany({
-			where: {
-				Campaingid: id,
-			},
-		}),
+		Milestone.getMilestonesByCampaingId(prisma, { id }),
 		prisma.donation.findMany({
 			where: {
 				Campaingid: id,

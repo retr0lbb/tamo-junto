@@ -3,6 +3,8 @@ import { prisma } from "../../lib/prisma";
 import { Prisma as PrismaClient } from "@prisma/client";
 import z from "zod";
 import { requestUser } from "../../lib/request-user-jwt";
+import { Campaing } from "../../models/campaing.model";
+import { Milestone } from "../../models/milestone.model";
 
 export const createMilestoneSchema = z.object({
 	objectiveAmmount: z.number().positive(),
@@ -22,14 +24,7 @@ export async function createMilestoneHandler(
 		request.body,
 	);
 
-	const campaing = await prisma.campaing.findUnique({
-		where: {
-			id,
-		},
-		include: {
-			User: true,
-		},
-	});
+	const campaing = await Campaing.getCampaing(prisma, { id });
 
 	if (!campaing) {
 		return reply.status(404).send({ message: "Campaing not found" });
@@ -52,11 +47,9 @@ export async function createMilestoneHandler(
 	}
 
 	const [milestone, donationsArray] = await Promise.all([
-		await prisma.milestone.findFirst({
-			where: {
-				objectiveAmmount: objectiveAmmount,
-				Campaingid: id,
-			},
+		await Milestone.verifyIfThisMilestoneDontAlreadyExists(prisma, {
+			campaingId: id,
+			goal: objectiveAmmount,
 		}),
 		await prisma.donation.findMany({
 			where: {
@@ -69,7 +62,6 @@ export async function createMilestoneHandler(
 	]);
 
 	if (milestone) {
-		console.log(milestone);
 		return reply
 			.status(400)
 			.send({ message: "One milestone with this objective was founded" });
@@ -82,21 +74,11 @@ export async function createMilestoneHandler(
 		new PrismaClient.Decimal(0),
 	);
 
-	if (
-		totalCollectedValueOfCampaing.comparedTo(objectiveAmmount) === 1 ||
-		totalCollectedValueOfCampaing.comparedTo(objectiveAmmount) === 0
-	) {
-		console.log(totalCollectedValueOfCampaing.comparedTo(objectiveAmmount));
-		console.log(totalCollectedValueOfCampaing, " ", objectiveAmmount);
+	if (totalCollectedValueOfCampaing.comparedTo(objectiveAmmount) === 1) {
 		return reply
 			.status(400)
 			.send({ message: "Campaing already collected more than milestone" });
 	}
-
-	console.log(
-		"Hey this is how much the campaing has arrecadated: ",
-		totalCollectedValueOfCampaing,
-	);
 
 	const milestoneResult = await prisma.milestone.create({
 		data: {

@@ -15,11 +15,7 @@ export async function deleteCampaingHandler(
 	const { id } = deleteCampaingRouteParams.parse(request.params);
 	const { id: userId } = requestUser.parse(request.user);
 
-	const campaing = await prisma.campaing.findUnique({
-		where: {
-			id,
-		},
-	});
+	const campaing = await Campaing.getCampaing(prisma, { id });
 
 	if (!campaing) {
 		return reply.status(404).send({ message: "Campaing not found" });
