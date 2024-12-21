@@ -3,6 +3,7 @@ import { prisma } from "../../lib/prisma";
 import z from "zod";
 import { requestUser } from "../../lib/request-user-jwt";
 import { Campaing } from "../../models/campaing.model";
+import { ServerError } from "../../_errors/serverError";
 
 export const createCampaingSchema = z.object({
 	campaingName: z.string().nonempty(),
@@ -17,22 +18,19 @@ export async function createCampaingHandler(
 		request.body,
 	);
 	const { id: userId } = requestUser.parse(request.user);
+	try {
+		const campaing = await Campaing.createCampaing(prisma, {
+			goal: campaingObjectiveAmmount,
+			name: campaingName,
+			Userid: userId,
+		});
 
-	await prisma.user.findUniqueOrThrow({
-		where: {
-			id: userId,
-		},
-	});
-
-	const campaing = await Campaing.insertCampainginDb(prisma, {
-		goal: campaingObjectiveAmmount,
-		name: campaingName,
-		Userid: userId,
-	});
-
-	return reply
-		.status(201)
-		.send({ message: "Campaing created with sucess", data: campaing });
+		return reply
+			.status(201)
+			.send({ message: "Campaing created with sucess", data: campaing });
+	} catch (error) {
+		return new ServerError(`An error occured at server: ${error}`);
+	}
 }
 
 export async function createCampaingRoute(app: FastifyInstance) {

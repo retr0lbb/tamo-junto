@@ -3,6 +3,7 @@ import { prisma } from "../../lib/prisma";
 import z from "zod";
 import { requestUser } from "../../lib/request-user-jwt";
 import { Campaing } from "../../models/campaing.model";
+import { ServerError } from "../../_errors/serverError";
 
 const deleteCampaingRouteParams = z.object({
 	id: z.string().uuid(),
@@ -15,22 +16,18 @@ export async function deleteCampaingHandler(
 	const { id } = deleteCampaingRouteParams.parse(request.params);
 	const { id: userId } = requestUser.parse(request.user);
 
-	const campaing = await Campaing.getCampaing(prisma, { id });
+	try {
+		const deletedCampaing = await Campaing.deleteCampaing(prisma, {
+			id,
+			userId,
+		});
 
-	if (!campaing) {
-		return reply.status(404).send({ message: "Campaing not found" });
-	}
-
-	if (userId !== campaing.Userid) {
 		return reply
-			.status(403)
-			.send({ message: "Only the creator of this campaing can delete it" });
+			.status(200)
+			.send({ message: "your campaing was deleted", data: deletedCampaing });
+	} catch (error) {
+		return new ServerError("an error occured processing delet campaing");
 	}
-
-	const result = await Campaing.deleteCampaing(prisma, { id });
-	return reply
-		.status(200)
-		.send({ message: "your campaing was deleted", data: result });
 }
 
 export async function deleteCampaingRoute(app: FastifyInstance) {

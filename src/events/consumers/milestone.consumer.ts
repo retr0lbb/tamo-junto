@@ -36,6 +36,9 @@ class MilestoneConsumer {
 			if (milestonesInOrderOfCompletion[0].isCompleted === true) {
 				return;
 			}
+			if (!milestonesInOrderOfCompletion[0]) {
+				return;
+			}
 
 			if (
 				totalDonationValue >=
@@ -64,7 +67,7 @@ class MilestoneConsumer {
 						userDonationValue >=
 						milestonesInOrderOfCompletion[0].minDonation.toNumber()
 					) {
-						const result = await prisma.userAchievedMilestone.create({
+						await prisma.userAchievedMilestone.create({
 							data: {
 								Milestoneid: milestonesInOrderOfCompletion[0].id,
 								Userid: donator.id,
@@ -84,7 +87,7 @@ class MilestoneConsumer {
 			}
 		} catch (error) {
 			console.log(error);
-			throw new Error("an error occured");
+			throw error;
 		}
 	}
 }

@@ -1,6 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import { compare } from "bcrypt";
-import { ClientError } from "../_errors/ClientError";
+import { ClientError } from "../_errors/clientError";
 interface UserInterface {
 	addressInfo: string | null;
 	email: string;
@@ -84,22 +84,27 @@ export class UserModel {
 		db: PrismaClient,
 		{ email, password }: Omit<UserInterface, "addressInfo" | "name">,
 	) {
-		const user = await db.user.findUnique({
-			where: {
-				email: email,
-			},
-		});
+		try {
+			const user = await db.user.findUnique({
+				where: {
+					email: email,
+				},
+			});
 
-		if (!user) {
-			throw new Error("User not found");
+			if (!user) {
+				throw new Error("User not found");
+			}
+
+			const match = await compare(password, user.password);
+
+			if (match === false) {
+				throw new ClientError("Password didn't match!");
+			}
+
+			return user;
+		} catch (error) {
+			// biome-ignore lint/complexity/noUselessCatch: <explanation>
+			throw error;
 		}
-
-		const match = await compare(password, user.password);
-
-		if (match === false) {
-			throw new ClientError("Password didn't match!");
-		}
-
-		return user;
 	}
 }
