@@ -17,7 +17,7 @@ export class UserModel {
 		});
 
 		if (!user) {
-			throw new Error("User cannot be found");
+			throw new ClientError("User cannot be found");
 		}
 
 		const donations = await db.campaing.findMany({
