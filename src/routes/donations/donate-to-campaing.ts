@@ -5,6 +5,7 @@ import { requestUser } from "../../lib/request-user-jwt";
 import z from "zod";
 import { Campaing } from "../../models/campaing.model";
 import donationEvent from "../../events/emiters/donation.events";
+import { ClientError } from "../../_errors/clientError";
 
 export const createDonationSchema = z.object({
 	donationAmmount: z.number().positive().nonnegative().min(0.01),
@@ -60,6 +61,16 @@ export async function createDonationHandler(
 			.send({ message: "Cannot donate to a campaing that achived its goal" });
 	}
 
+	const user = await prisma.user.findUnique({
+		where: {
+			id: userId,
+		},
+		select: { email: true },
+	});
+	if (!user) {
+		throw new ClientError("The user of this token no longer exits");
+	}
+
 	const donation = await prisma.donation.create({
 		data: {
 			donationAmmount,
@@ -72,6 +83,12 @@ export async function createDonationHandler(
 		campaing.id,
 		totalCollectedValueOfCampaing.toNumber() + donationAmmount,
 	);
+
+	donationEvent.sendEmail({
+		subject: "Donation complete",
+		text: `You sucessfully donated to ${campaing.name} with the value of R$ ${donationAmmount}`,
+		to: user.email,
+	});
 
 	return reply.status(201).send({
 		message: "donation computed with sucess",

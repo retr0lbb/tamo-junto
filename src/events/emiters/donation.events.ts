@@ -1,4 +1,5 @@
 import { messageBroker } from "../message-broker";
+import type { mailOptions } from "../../lib/mailtransport";
 
 export interface Milestone {
 	id: string;
@@ -20,6 +21,9 @@ class donationEvent {
 			campaingId,
 			totalDonatedValue,
 		});
+	}
+	static sendEmail(data: mailOptions) {
+		messageBroker.emit("send-mail", data);
 	}
 }
 

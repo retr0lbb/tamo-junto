@@ -12,6 +12,7 @@ import { updateCampaingRoute } from "./routes/campaing/update-campaing";
 import { getMilestoneWinnersRoute } from "./routes/milestones/get-milestone-winners";
 import plugin from "./lib/jwt-plugin";
 import "./events/consumers/milestone.consumer";
+import "./events/consumers/email.consumer";
 import { getUserDonatiosRoute } from "./routes/user/get-user-donations";
 import { ErrorHandler } from "./_errors/error-handler";
 
