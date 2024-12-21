@@ -11,10 +11,14 @@ export interface Milestone {
 }
 
 // biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
-class CampaingEvent {
+class MilestoneEvent {
 	static emitCheckIfDonationCompletesMilestone(donationId: string) {
 		messageBroker.emit("milestone-complete", donationId);
 	}
+
+	static emitAddWinners(data: { milestoneId: string }) {
+		messageBroker.emit("add-winners", data);
+	}
 }
 
-export default CampaingEvent;
+export default MilestoneEvent;

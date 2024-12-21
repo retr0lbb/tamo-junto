@@ -1,6 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 import { compare } from "bcrypt";
 import { ClientError } from "../_errors/clientError";
+import { prisma } from "../lib/prisma";
 interface UserInterface {
 	addressInfo: string | null;
 	email: string;
@@ -106,5 +107,21 @@ export class UserModel {
 			// biome-ignore lint/complexity/noUselessCatch: <explanation>
 			throw error;
 		}
+	}
+
+	static async deleteUser(db: PrismaClient, data: { id: string }) {
+		const user = await db.user.findUnique({
+			where: { id: data.id },
+		});
+
+		if (!user) {
+			throw new ClientError("Cannot delete user that doesn't exits");
+		}
+
+		await prisma.user.delete({
+			where: {
+				id: data.id,
+			},
+		});
 	}
 }

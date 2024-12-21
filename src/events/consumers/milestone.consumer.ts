@@ -1,5 +1,9 @@
+import { PrismaClientValidationError } from "@prisma/client/runtime/library";
+import { ServerError } from "../../_errors/serverError";
 import { prisma } from "../../lib/prisma";
+import donationEvent from "../emiters/donation.events";
 import { messageBroker } from "../message-broker";
+import MilestoneEvent from "../emiters/milestone.evets";
 
 class MilestoneConsumer {
 	constructor() {
@@ -13,6 +17,77 @@ class MilestoneConsumer {
 				});
 			},
 		);
+		messageBroker.on("add-winners", async (data: { milestoneId: string }) => {
+			await this.createMilestonesWinners(data);
+		});
+	}
+
+	private async createMilestonesWinners(data: {
+		milestoneId: string;
+	}) {
+		try {
+			const milestone = await prisma.milestone.findUnique({
+				where: {
+					id: data.milestoneId,
+				},
+			});
+
+			if (!milestone) {
+				return;
+			}
+
+			const campaing = await prisma.campaing.findUnique({
+				where: {
+					id: milestone.Campaingid ?? "",
+				},
+			});
+
+			if (!campaing) {
+				return;
+			}
+
+			const donators = await prisma.user.findMany({
+				where: {
+					Donations: {
+						some: {
+							Campaingid: campaing.id,
+						},
+					},
+				},
+				include: {
+					Donations: true,
+				},
+			});
+
+			donators.map(async (donator) => {
+				const donatorTotalValue = donator.Donations.reduce(
+					(acc, item) => acc + item.donationAmmount.toNumber(),
+					0,
+				);
+
+				if (donatorTotalValue >= milestone.objectiveAmmount.toNumber()) {
+					await prisma.userAchievedMilestone.create({
+						data: {
+							Userid: donator.id,
+							Milestoneid: milestone.id,
+						},
+					});
+					donationEvent.sendEmail({
+						subject: `Congratulations ${donator.name}`,
+						text: "you have earned a milestone prize",
+						html: `<h1>Milestone prize</h1>
+						<div>by this time you have donated enough money to earn a 
+						milestone prize for the campaing <strong>${campaing.name}</strong></div>
+						<p>See more information on our website <a href="http://localhost:3333">link</a></p>
+						`,
+					});
+				}
+			});
+		} catch (error) {
+			throw new ServerError(
+				"An error occured when processing milestones winners",
+			);
+		}
 	}
 
 	private async verifyIfMilestoneIsAchived({
@@ -44,38 +119,6 @@ class MilestoneConsumer {
 				totalDonationValue >=
 				milestonesInOrderOfCompletion[0].objectiveAmmount.toNumber()
 			) {
-				const donators = await prisma.user.findMany({
-					where: {
-						Donations: {
-							some: {
-								Campaingid: campaingId,
-							},
-						},
-					},
-					include: {
-						Donations: true,
-					},
-				});
-
-				donators.map(async (donator) => {
-					const userDonationValue = donator.Donations.reduce(
-						(acc, item) => acc + item.donationAmmount.toNumber(),
-						0,
-					);
-
-					if (
-						userDonationValue >=
-						milestonesInOrderOfCompletion[0].minDonation.toNumber()
-					) {
-						await prisma.userAchievedMilestone.create({
-							data: {
-								Milestoneid: milestonesInOrderOfCompletion[0].id,
-								Userid: donator.id,
-							},
-						});
-					}
-				});
-
 				await prisma.milestone.update({
 					data: {
 						isCompleted: true,
@@ -83,6 +126,9 @@ class MilestoneConsumer {
 					where: {
 						id: milestonesInOrderOfCompletion[0].id,
 					},
+				});
+				MilestoneEvent.emitAddWinners({
+					milestoneId: milestonesInOrderOfCompletion[0].id,
 				});
 			}
 		} catch (error) {
