@@ -15,8 +15,15 @@ import "./events/consumers/milestone.consumer";
 import "./events/consumers/email.consumer";
 import { getUserDonatiosRoute } from "./routes/user/get-user-donations";
 import { ErrorHandler } from "./_errors/error-handler";
+import fs from "node:fs";
 
-const app = fastify();
+const app = fastify({
+	logger: true,
+	// https: {
+	// 	key: fs.readFileSync("./server.key"),
+	// 	cert: fs.readFileSync("./server.crt"),
+	// },
+});
 app.register(plugin);
 app.get("/", (request, reply) => {
 	reply.send("Api funcionando com sucesso");

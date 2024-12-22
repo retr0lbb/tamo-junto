@@ -7,3 +7,9 @@
 .vscode
 dist
 build
+
+
+#https modules self certificate
+server.crt
+server.csr
+server.key
