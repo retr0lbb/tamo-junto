@@ -6,6 +6,7 @@ const envSchema = z.object({
 	GMAIL_PASS: z.string().min(1),
 	MERCADOPAGO_TEST_KEY: z.string().min(1),
 	MERCADOPAGO_PUBLIC_KEY: z.string().min(1),
+	STRIPE_KEY: z.string().min(1),
 });
 
 export const env = envSchema.parse(process.env);

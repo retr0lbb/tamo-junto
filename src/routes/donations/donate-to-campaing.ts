@@ -6,8 +6,11 @@ import z from "zod";
 import { Campaing } from "../../models/campaing.model";
 import donationEvent from "../../events/emiters/donation.events";
 import { ClientError } from "../../_errors/clientError";
-import { createPaymentByCard } from "../../lib/payment";
 import { ServerError } from "../../_errors/serverError";
+import {
+	generatePaymentIntent,
+	generatePaymentSession,
+} from "../../lib/payment";
 
 export const createDonationSchema = z.object({
 	donationAmmount: z.number().positive().nonnegative().min(0.01),
@@ -82,6 +85,13 @@ export async function createDonationHandler(
 			},
 		});
 
+		const result = await generatePaymentSession({
+			campaingName: campaing.name,
+			price: donationAmmount,
+		});
+
+		console.log(result);
+
 		donationEvent.emitCheckIfMilestoneIsCompleted(
 			campaing.id,
 			totalCollectedValueOfCampaing.toNumber() + donationAmmount,
@@ -93,19 +103,12 @@ export async function createDonationHandler(
 			to: user.email,
 		});
 
-		const result = await createPaymentByCard({
-			body: {
-				payment_method_id: "debit_card", // Método de pagamento
-				transaction_amount: donationAmmount,
-				description: `Pagamento da doação da campanha ${campaing.name} no valor de R$ ${donationAmmount}`,
-			},
-		});
-
 		return reply.status(201).send({
 			message: "donation computed with sucess",
 			data: donation,
 		});
 	} catch (error) {
+		console.log(error);
 		throw new ServerError("An error occurred at donations");
 	}
 }
