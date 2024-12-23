@@ -6,6 +6,8 @@ import z from "zod";
 import { Campaing } from "../../models/campaing.model";
 import donationEvent from "../../events/emiters/donation.events";
 import { ClientError } from "../../_errors/clientError";
+import { createPaymentByCard } from "../../lib/payment";
+import { ServerError } from "../../_errors/serverError";
 
 export const createDonationSchema = z.object({
 	donationAmmount: z.number().positive().nonnegative().min(0.01),
@@ -23,77 +25,89 @@ export async function createDonationHandler(
 
 	const { id } = createDonationRouteParams.parse(request.params);
 
-	const campaing = await Campaing.verifyIfCampaingExists(prisma, { id });
+	try {
+		const campaing = await Campaing.verifyIfCampaingExists(prisma, { id });
 
-	if (!campaing) {
-		return reply.status(404).send({ message: "Campaing not found" });
+		if (!campaing) {
+			return reply.status(404).send({ message: "Campaing not found" });
+		}
+
+		if (campaing.Userid === userId) {
+			return reply
+				.status(403)
+				.send({ message: "You cannot donate to your own campaing" });
+		}
+
+		const donationsArray = await prisma.donation.findMany({
+			where: {
+				Campaingid: id,
+			},
+			select: {
+				donationAmmount: true,
+			},
+		});
+
+		const totalCollectedValueOfCampaing = donationsArray.reduce(
+			(acc, donation) => {
+				return acc.plus(donation.donationAmmount);
+			},
+			new PrismaClient.Decimal(0),
+		);
+
+		if (
+			totalCollectedValueOfCampaing
+				.plus(donationAmmount)
+				.comparedTo(campaing.goal) === 1
+		) {
+			return reply
+				.status(400)
+				.send({ message: "Cannot donate to a campaing that achived its goal" });
+		}
+
+		const user = await prisma.user.findUnique({
+			where: {
+				id: userId,
+			},
+			select: { email: true },
+		});
+		if (!user) {
+			throw new ClientError("The user of this token no longer exits");
+		}
+
+		const donation = await prisma.donation.create({
+			data: {
+				donationAmmount,
+				Campaingid: id,
+				Userid: userId,
+			},
+		});
+
+		donationEvent.emitCheckIfMilestoneIsCompleted(
+			campaing.id,
+			totalCollectedValueOfCampaing.toNumber() + donationAmmount,
+		);
+
+		donationEvent.sendEmail({
+			subject: "Donation complete",
+			text: `You sucessfully donated to ${campaing.name} with the value of R$ ${donationAmmount}`,
+			to: user.email,
+		});
+
+		const result = await createPaymentByCard({
+			body: {
+				payment_method_id: "debit_card", // Método de pagamento
+				transaction_amount: donationAmmount,
+				description: `Pagamento da doação da campanha ${campaing.name} no valor de R$ ${donationAmmount}`,
+			},
+		});
+
+		return reply.status(201).send({
+			message: "donation computed with sucess",
+			data: donation,
+		});
+	} catch (error) {
+		throw new ServerError("An error occurred at donations");
 	}
-
-	if (campaing.Userid === userId) {
-		return reply
-			.status(403)
-			.send({ message: "You cannot donate to your own campaing" });
-	}
-
-	const donationsArray = await prisma.donation.findMany({
-		where: {
-			Campaingid: id,
-		},
-		select: {
-			donationAmmount: true,
-		},
-	});
-
-	const totalCollectedValueOfCampaing = donationsArray.reduce(
-		(acc, donation) => {
-			return acc.plus(donation.donationAmmount);
-		},
-		new PrismaClient.Decimal(0),
-	);
-
-	if (
-		totalCollectedValueOfCampaing
-			.plus(donationAmmount)
-			.comparedTo(campaing.goal) === 1
-	) {
-		return reply
-			.status(400)
-			.send({ message: "Cannot donate to a campaing that achived its goal" });
-	}
-
-	const user = await prisma.user.findUnique({
-		where: {
-			id: userId,
-		},
-		select: { email: true },
-	});
-	if (!user) {
-		throw new ClientError("The user of this token no longer exits");
-	}
-
-	const donation = await prisma.donation.create({
-		data: {
-			donationAmmount,
-			Campaingid: id,
-			Userid: userId,
-		},
-	});
-
-	donationEvent.emitCheckIfMilestoneIsCompleted(
-		campaing.id,
-		totalCollectedValueOfCampaing.toNumber() + donationAmmount,
-	);
-
-	donationEvent.sendEmail({
-		subject: "Donation complete",
-		text: `You sucessfully donated to ${campaing.name} with the value of R$ ${donationAmmount}`,
-		to: user.email,
-	});
-
-	return reply.status(201).send({
-		message: "donation computed with sucess",
-		data: donation,
-	});
 }
 
 export async function createDonationRoute(app: FastifyInstance) {
