@@ -8,6 +8,7 @@ type FastifyErrorHandler = FastifyInstance["errorHandler"];
 
 export const ErrorHandler: FastifyErrorHandler = (error, request, reply) => {
 	if (error instanceof ZodError) {
+		console.log(error);
 		return reply
 			.status(400)
 			.send({ message: "Invalid Input", error: error.flatten().fieldErrors });

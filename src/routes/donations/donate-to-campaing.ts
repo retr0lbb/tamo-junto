@@ -1,12 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
-import { Prisma as PrismaClient } from "@prisma/client";
 import { requestUser } from "../../lib/request-user-jwt";
 import z from "zod";
-import { Campaing } from "../../models/campaing.model";
-import donationEvent from "../../events/emiters/donation.events";
-import { ClientError } from "../../_errors/clientError";
-import { ServerError } from "../../_errors/serverError";
 import { DonationModel } from "../../models/donation.model";
 
 export const createDonationSchema = z.object({

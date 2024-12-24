@@ -15,7 +15,7 @@ import "./events/consumers/milestone.consumer";
 import "./events/consumers/email.consumer";
 import { getUserDonatiosRoute } from "./routes/user/get-user-donations";
 import { ErrorHandler } from "./_errors/error-handler";
-import fs from "node:fs";
+import { deleteUserRoute } from "./routes/user/delete-user";
 
 const app = fastify({
 	logger: true,
@@ -43,6 +43,7 @@ app.register(deleteCampaingRoute);
 app.register(updateCampaingRoute);
 app.register(getMilestoneWinnersRoute);
 app.register(getUserDonatiosRoute);
+app.register(deleteUserRoute);
 
 app
 	.listen({

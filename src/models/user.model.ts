@@ -123,5 +123,7 @@ export class UserModel {
 				id: data.id,
 			},
 		});
+
+		return true;
 	}
 }
