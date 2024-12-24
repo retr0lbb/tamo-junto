@@ -9,6 +9,8 @@ import { Milestone } from "../../models/milestone.model";
 export const createMilestoneSchema = z.object({
 	objectiveAmmount: z.number().positive(),
 	minDonation: z.number().positive().nullable(),
+	name: z.string().min(3),
+	description: z.string().nullable(),
 });
 const createMilestoneRouteParams = z.object({
 	id: z.string().uuid(),
@@ -20,77 +22,21 @@ export async function createMilestoneHandler(
 ) {
 	const { id } = createMilestoneRouteParams.parse(request.params);
 	const { id: userId } = requestUser.parse(request.user);
-	const { minDonation, objectiveAmmount } = createMilestoneSchema.parse(
-		request.body,
-	);
+	const { minDonation, objectiveAmmount, description, name } =
+		createMilestoneSchema.parse(request.body);
 
-	const campaing = await Campaing.getCampaing(prisma, { id });
-
-	if (!campaing) {
-		return reply.status(404).send({ message: "Campaing not found" });
-	}
-
-	if (campaing.Userid !== userId) {
-		return reply.status(403).send({
-			message:
-				"You could not create a milestone on an Campaing thats not yours",
-		});
-	}
-
-	if (
-		objectiveAmmount >= campaing.goal.toNumber() ||
-		(minDonation !== null && minDonation >= campaing.goal.toNumber())
-	) {
-		return reply
-			.status(400)
-			.send({ message: "Objective cannot surpass campaing goal" });
-	}
-
-	const [milestone, donationsArray] = await Promise.all([
-		await Milestone.verifyIfThisMilestoneDontAlreadyExists(prisma, {
-			campaingId: id,
-			goal: objectiveAmmount,
-		}),
-		await prisma.donation.findMany({
-			where: {
-				Campaingid: id,
-			},
-			select: {
-				donationAmmount: true,
-			},
-		}),
-	]);
-
-	if (milestone) {
-		return reply
-			.status(400)
-			.send({ message: "One milestone with this objective was founded" });
-	}
-
-	const totalCollectedValueOfCampaing = donationsArray.reduce(
-		(acc, donation) => {
-			return acc.plus(donation.donationAmmount);
-		},
-		new PrismaClient.Decimal(0),
-	);
-
-	if (totalCollectedValueOfCampaing.comparedTo(objectiveAmmount) === 1) {
-		return reply
-			.status(400)
-			.send({ message: "Campaing already collected more than milestone" });
-	}
-
-	const milestoneResult = await prisma.milestone.create({
-		data: {
-			minDonation: minDonation ?? 0,
-			objectiveAmmount,
-			Campaingid: id,
-		},
+	const milestone = await Milestone.createMilestone(prisma, {
+		campaingId: id,
+		name,
+		objectiveAmmount,
+		userId,
+		description,
+		minDonation,
 	});
 
 	return reply
 		.status(201)
-		.send({ message: "Milestone Created with success", data: milestoneResult });
+		.send({ message: "Milestone Created with success", data: milestone });
 }
 
 export async function createMilestoneRoute(app: FastifyInstance) {

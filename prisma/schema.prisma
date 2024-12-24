@@ -28,7 +28,7 @@ model Donation{
   donationDate DateTime @default(now())
   donationAmmount Decimal
 
- // status Boolean @default(false)
+  status Boolean @default(false)
 
   User User? @relation(fields: [Userid], references: [id])
   Userid String?
@@ -62,8 +62,8 @@ model Prize{
 
 model Milestone{
   id String @id @default(uuid())
- // name String
-  //description String?
+  name String
+  description String?
   objectiveAmmount Decimal
   minDonation Decimal
   isCompleted Boolean @default(false)
@@ -74,6 +74,7 @@ model Milestone{
   Campaingid String?
 
   UserAchievedMilestone UserAchievedMilestone[]
+  @@unique([objectiveAmmount, Campaingid], name: "campaing_milestone_cap")
 }
 
 
