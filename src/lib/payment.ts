@@ -37,23 +37,52 @@ export async function generatePaymentSession({
 
 export interface GeneratePaymentIntentProps {
 	amount: number;
-	email: string;
+	userId: string;
 	currency: "usd" | "brl";
 }
 export async function generatePaymentIntent({
 	amount,
-	email,
+	userId,
 	currency,
 }: GeneratePaymentIntentProps) {
 	try {
+		const paymentIntent = await stripeClient.paymentIntents.create(
+			{
+				amount: amount * 100,
+				currency,
+				payment_method_types: ["card", "paypal", "google_pay", "apple_pay"],
+				transfer_data: {
+					destination: userId,
+					amount: amount * 100,
+				},
+			},
+			{ timeout: 10000 },
+		);
+
+		return paymentIntent;
+	} catch (error) {
+		console.log(error);
+	}
+}
+
+interface createStripeRelatedUserParams {
+	email: string;
+}
+
+export async function createStripeRelatedUser({
+	email,
+}: createStripeRelatedUserParams) {
+	try {
 		const user = await stripeClient.accounts.create({
 			email,
-			type: "standard",
+			type: "custom",
 			country: "US",
 			capabilities: {
 				card_payments: { requested: true },
 				transfers: { requested: true },
 			},
+
+			business_type: "individual",
 		});
 
 		const accountLink = await stripeClient.accountLinks.create({
@@ -62,22 +91,6 @@ export async function generatePaymentIntent({
 			return_url: "http://localhost:3333",
 			refresh_url: "http://locahost:3333",
 		});
-
-		// const paymentIntent = await stripeClient.paymentIntents.create(
-		// 	{
-		// 		amount: amount * 100,
-		// 		currency,
-		// 		payment_method_types: ["card", "paypal", "google_pay", "apple_pay"],
-
-		// 		transfer_data: {
-		// 			destination: user.id,
-		// 			amount: amount * 100,
-		// 		},
-		// 	},
-		// 	{ timeout: 10000 },
-		// );
-
-		console.log("Hey look at this ", accountLink);
 	} catch (error) {
 		console.log(error);
 	}
