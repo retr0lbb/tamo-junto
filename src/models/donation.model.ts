@@ -3,6 +3,7 @@ import { Prisma as PrismaClient } from "@prisma/client";
 import { NotFound } from "../_errors/notFoundError";
 import { ClientError } from "../_errors/clientError";
 import donationEvent from "../events/emiters/donation.events";
+import { generatePaymentIntent } from "../lib/payment";
 
 // biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class DonationModel {
@@ -67,25 +68,33 @@ export class DonationModel {
 			throw new ClientError("The user of this token no longer exits");
 		}
 
-		const donation = await db.donation.create({
-			data: {
-				donationAmmount: data.donnationAmmount,
-				Campaingid: data.campaingId,
-				Userid: data.userId,
-			},
+		// const donation = await db.donation.create({
+		// 	data: {
+		// 		donationAmmount: data.donnationAmmount,
+		// 		Campaingid: data.campaingId,
+		// 		Userid: data.userId,
+		// 	},
+		// });
+
+		const paymentData = await generatePaymentIntent({
+			amount: data.donnationAmmount,
+			currency: "brl",
+			email: user.email,
 		});
 
-		donationEvent.emitCheckIfMilestoneIsCompleted(
-			campaing.id,
-			totalCollectedValueOfCampaing.toNumber() + data.donnationAmmount,
-		);
+		console.log(paymentData);
 
-		donationEvent.sendEmail({
-			subject: "Donation complete",
-			text: `You sucessfully donated to ${campaing.name} with the value of R$ ${data.donnationAmmount}`,
-			to: user.email,
-		});
+		// donationEvent.emitCheckIfMilestoneIsCompleted(
+		// 	campaing.id,
+		// 	totalCollectedValueOfCampaing.toNumber() + data.donnationAmmount,
+		// );
 
-		return donation;
+		// donationEvent.sendEmail({
+		// 	subject: "Donation complete",
+		// 	text: `You sucessfully donated to ${campaing.name} with the value of R$ ${data.donnationAmmount}`,
+		// 	to: user.email,
+		// });
+
+		return paymentData;
 	}
 }

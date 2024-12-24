@@ -8,11 +8,17 @@ export class Campaing {
 		db: PrismaClient,
 		data: { name: string; Userid: string; goal: number },
 	) {
-		await db.user.findUniqueOrThrow({
+		const user = await db.user.findUniqueOrThrow({
 			where: {
 				id: data.Userid,
 			},
 		});
+
+		if (!user.stripeID) {
+			throw new ClientError(
+				"You must create a stripe account to recive the campaing money",
+			);
+		}
 
 		const result = await db.campaing.create({
 			data: {

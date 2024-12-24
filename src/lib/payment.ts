@@ -1,18 +1,11 @@
 import { Stripe } from "stripe";
 import { env } from "./env";
 import { never } from "zod";
+import { availableMemory } from "node:process";
 
 const stripeClient = new Stripe(env.STRIPE_KEY, {});
 
 interface Props extends Stripe.PaymentIntentCreateParams {}
-
-export async function generatePaymentIntent(props: Props) {
-	const paymentIntent = await stripeClient.paymentIntents.create({
-		...props,
-	});
-
-	return paymentIntent;
-}
 
 export async function generatePaymentSession({
 	campaingName,
@@ -40,4 +33,52 @@ export async function generatePaymentSession({
 	});
 
 	return paymentSession;
+}
+
+export interface GeneratePaymentIntentProps {
+	amount: number;
+	email: string;
+	currency: "usd" | "brl";
+}
+export async function generatePaymentIntent({
+	amount,
+	email,
+	currency,
+}: GeneratePaymentIntentProps) {
+	try {
+		const user = await stripeClient.accounts.create({
+			email,
+			type: "standard",
+			country: "US",
+			capabilities: {
+				card_payments: { requested: true },
+				transfers: { requested: true },
+			},
+		});
+
+		const accountLink = await stripeClient.accountLinks.create({
+			account: user.id,
+			type: "account_onboarding",
+			return_url: "http://localhost:3333",
+			refresh_url: "http://locahost:3333",
+		});
+
+		// const paymentIntent = await stripeClient.paymentIntents.create(
+		// 	{
+		// 		amount: amount * 100,
+		// 		currency,
+		// 		payment_method_types: ["card", "paypal", "google_pay", "apple_pay"],
+
+		// 		transfer_data: {
+		// 			destination: user.id,
+		// 			amount: amount * 100,
+		// 		},
+		// 	},
+		// 	{ timeout: 10000 },
+		// );
+
+		console.log("Hey look at this ", accountLink);
+	} catch (error) {
+		console.log(error);
+	}
 }

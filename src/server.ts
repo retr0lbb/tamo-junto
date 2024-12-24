@@ -18,7 +18,6 @@ import { ErrorHandler } from "./_errors/error-handler";
 import { deleteUserRoute } from "./routes/user/delete-user";
 
 const app = fastify({
-	logger: true,
 	// https: {
 	// 	key: fs.readFileSync("./server.key"),
 	// 	cert: fs.readFileSync("./server.crt"),

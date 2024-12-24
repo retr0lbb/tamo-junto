@@ -17,6 +17,8 @@ model User{
   password String
   addressInfo String?
 
+  stripeID String?
+
   campaing Campaing[]
   Donations Donation[]
 
@@ -44,6 +46,7 @@ model Campaing{
 
   donations Donation[]
   milestones Milestone[]
+
 
   User User? @relation(fields: [Userid], references: [id], onDelete: Cascade)
   Userid String?

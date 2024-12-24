@@ -55,7 +55,11 @@ class MilestoneConsumer {
 					},
 				},
 				include: {
-					Donations: true,
+					Donations: {
+						where: {
+							status: true,
+						},
+					},
 				},
 			});
 
