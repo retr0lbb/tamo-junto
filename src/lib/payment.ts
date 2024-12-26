@@ -67,22 +67,31 @@ export async function generatePaymentIntent({
 
 interface createStripeRelatedUserParams {
 	email: string;
+	firstName: string;
+	lastName: string;
 }
 
 export async function createStripeRelatedUser({
 	email,
+	firstName,
+	lastName,
 }: createStripeRelatedUserParams) {
 	try {
 		const user = await stripeClient.accounts.create({
 			email,
+
 			type: "custom",
-			country: "US",
+			country: "BR",
 			capabilities: {
 				card_payments: { requested: true },
 				transfers: { requested: true },
 			},
 
-			business_type: "individual",
+			business_type: "non_profit",
+			individual: {
+				first_name: firstName,
+				last_name: lastName,
+			},
 		});
 
 		const accountLink = await stripeClient.accountLinks.create({
@@ -91,7 +100,10 @@ export async function createStripeRelatedUser({
 			return_url: "http://localhost:3333",
 			refresh_url: "http://locahost:3333",
 		});
+
+		return accountLink;
 	} catch (error) {
 		console.log(error);
+		throw error;
 	}
 }
