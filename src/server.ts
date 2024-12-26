@@ -17,6 +17,7 @@ import { getUserDonatiosRoute } from "./routes/user/get-user-donations";
 import { ErrorHandler } from "./_errors/error-handler";
 import { deleteUserRoute } from "./routes/user/delete-user";
 import { CreateStripeUserRoute } from "./routes/user/create-stripe-user";
+import { ListenWebHookRoute } from "./webhooks/webhook";
 
 const app = fastify({
 	connectionTimeout: 10000, // 10 segundos
@@ -46,6 +47,7 @@ app.register(getMilestoneWinnersRoute);
 app.register(getUserDonatiosRoute);
 app.register(deleteUserRoute);
 app.register(CreateStripeUserRoute);
+app.register(ListenWebHookRoute);
 
 app
 	.listen({

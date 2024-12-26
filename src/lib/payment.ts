@@ -3,7 +3,7 @@ import { env } from "./env";
 import { never } from "zod";
 import { availableMemory } from "node:process";
 
-const stripeClient = new Stripe(env.STRIPE_KEY, {});
+export const stripeClient = new Stripe(env.STRIPE_KEY, {});
 
 interface Props extends Stripe.PaymentIntentCreateParams {}
 
@@ -87,7 +87,7 @@ export async function createStripeRelatedUser({
 				transfers: { requested: true },
 			},
 
-			business_type: "non_profit",
+			business_type: "individual",
 			individual: {
 				first_name: firstName,
 				last_name: lastName,

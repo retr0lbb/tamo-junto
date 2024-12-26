@@ -31,7 +31,7 @@ export async function CreateStripeUSerHandler(
 			lastName,
 		});
 
-		return reply.status(404).send({ something });
+		return reply.status(200).send({ something });
 	} catch (error) {
 		console.log(error);
 		throw error;
