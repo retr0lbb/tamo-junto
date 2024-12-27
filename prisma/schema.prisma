@@ -17,13 +17,29 @@ model User{
   password String
   addressInfo String?
 
-  stripeID String?
+  stripeID String @default("")
 
   campaing Campaing[]
   Donations Donation[]
 
   UserAchievedMilestone UserAchievedMilestone[]
+
+  Address Address? @relation(fields: [Addressid], references: [id])
+  Addressid Int?
 }
+
+model Address{
+  id Int @id @default(autoincrement())
+  country String
+  state String
+  city String
+  streetName String
+  streetNumber String
+
+  User User[]
+}
+
+
 
 model Donation{
   id String @id @default(uuid())

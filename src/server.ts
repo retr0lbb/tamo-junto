@@ -26,6 +26,13 @@ const app = fastify({
 	// 	cert: fs.readFileSync("./server.crt"),
 	// },
 });
+
+app.register(import("fastify-raw-body"), {
+	field: "rawBody",
+	global: false,
+	encoding: "utf-8",
+	runFirst: true,
+});
 app.register(plugin);
 app.get("/", (request, reply) => {
 	reply.send("Api funcionando com sucesso");
