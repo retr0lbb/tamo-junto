@@ -1,7 +1,7 @@
 import { Stripe } from "stripe";
 import { env } from "./env";
 import { never } from "zod";
-import { availableMemory } from "node:process";
+import { availableMemory, throwDeprecation } from "node:process";
 import { prisma } from "./prisma";
 
 export const stripeClient = new Stripe(env.STRIPE_KEY, {});
@@ -38,12 +38,12 @@ export async function generatePaymentSession({
 
 export interface GeneratePaymentIntentProps {
 	amount: number;
-	userId: string;
+	campaingOwnerStripeId: string;
 	currency: "usd" | "brl";
 }
 export async function generatePaymentIntent({
 	amount,
-	userId,
+	campaingOwnerStripeId,
 	currency,
 }: GeneratePaymentIntentProps) {
 	try {
@@ -51,10 +51,10 @@ export async function generatePaymentIntent({
 			{
 				amount: amount * 100,
 				currency,
-				payment_method_types: ["card", "paypal", "google_pay", "apple_pay"],
+				payment_method_types: ["card"],
+				application_fee_amount: Math.round(amount * 100 * 0.005),
 				transfer_data: {
-					destination: userId,
-					amount: amount * 100,
+					destination: campaingOwnerStripeId,
 				},
 			},
 			{ timeout: 10000 },
@@ -63,6 +63,21 @@ export async function generatePaymentIntent({
 		return paymentIntent;
 	} catch (error) {
 		console.log(error);
+		throw new Error("Não foi possível criar o PaymentIntent.");
+	}
+}
+
+export async function confirmPaymentIntent(data: {
+	paymentIntentId: string;
+	payment_method: string;
+}) {
+	try {
+		const confirmedIntent = await stripeClient.paymentIntents.confirm(
+			data.paymentIntentId,
+		);
+	} catch (error) {
+		console.log(error);
+		throw error;
 	}
 }
 

@@ -3,7 +3,7 @@ import { Prisma as PrismaClient } from "@prisma/client";
 import { NotFound } from "../_errors/notFoundError";
 import { ClientError } from "../_errors/clientError";
 import donationEvent from "../events/emiters/donation.events";
-import { generatePaymentIntent } from "../lib/payment";
+import { confirmPaymentIntent, generatePaymentIntent } from "../lib/payment";
 
 // biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class DonationModel {
@@ -15,9 +15,12 @@ export class DonationModel {
 			where: {
 				id: data.campaingId,
 			},
+			include: {
+				User: true,
+			},
 		});
 
-		if (!campaing) {
+		if (!campaing || !campaing.User || !campaing.User.stripeID) {
 			throw new NotFound("Campaing not founded");
 		}
 
@@ -68,26 +71,32 @@ export class DonationModel {
 			throw new ClientError("The user of this token no longer exits");
 		}
 
-		// const donation = await db.donation.create({
-		// 	data: {
-		// 		donationAmmount: data.donnationAmmount,
-		// 		Campaingid: data.campaingId,
-		// 		Userid: data.userId,
-		// 	},
-		// });
+		const [donation, paymentData] = await Promise.all([
+			db.donation.create({
+				data: {
+					donationAmmount: data.donnationAmmount,
+					Campaingid: data.campaingId,
+					Userid: data.userId,
+					status: false,
+				},
+			}),
 
-		const paymentData = await generatePaymentIntent({
-			amount: data.donnationAmmount,
-			currency: "brl",
-			email: user.email,
+			generatePaymentIntent({
+				amount: data.donnationAmmount,
+				currency: "brl",
+				campaingOwnerStripeId: campaing.User.stripeID,
+			}),
+		]);
+
+		confirmPaymentIntent({
+			payment_method: "Card",
+			paymentIntentId: paymentData.id ?? "",
 		});
 
-		console.log(paymentData);
-
-		// donationEvent.emitCheckIfMilestoneIsCompleted(
-		// 	campaing.id,
-		// 	totalCollectedValueOfCampaing.toNumber() + data.donnationAmmount,
-		// );
+		donationEvent.emitCheckIfMilestoneIsCompleted(
+			campaing.id,
+			totalCollectedValueOfCampaing.toNumber() + data.donnationAmmount,
+		);
 
 		// donationEvent.sendEmail({
 		// 	subject: "Donation complete",
