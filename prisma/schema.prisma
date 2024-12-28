@@ -17,7 +17,7 @@ model User{
   password String
   addressInfo String?
 
-  stripeID String @default("")
+  stripeID String @unique
 
   campaing Campaing[]
   Donations Donation[]

@@ -2,6 +2,7 @@ import { Stripe } from "stripe";
 import { env } from "./env";
 import { never } from "zod";
 import { availableMemory } from "node:process";
+import { prisma } from "./prisma";
 
 export const stripeClient = new Stripe(env.STRIPE_KEY, {});
 
@@ -66,6 +67,7 @@ export async function generatePaymentIntent({
 }
 
 interface createStripeRelatedUserParams {
+	userId: string;
 	email: string;
 	firstName: string;
 	lastName: string;
@@ -75,11 +77,11 @@ export async function createStripeRelatedUser({
 	email,
 	firstName,
 	lastName,
+	userId,
 }: createStripeRelatedUserParams) {
 	try {
 		const user = await stripeClient.accounts.create({
 			email,
-
 			type: "custom",
 			country: "BR",
 			capabilities: {
@@ -94,12 +96,22 @@ export async function createStripeRelatedUser({
 			},
 		});
 
-		const accountLink = await stripeClient.accountLinks.create({
-			account: user.id,
-			type: "account_onboarding",
-			return_url: "http://localhost:3333",
-			refresh_url: "http://locahost:3333",
-		});
+		const [userStripeDatabase, accountLink] = await Promise.all([
+			prisma.user.update({
+				where: {
+					id: userId,
+				},
+				data: {
+					stripeID: user.id,
+				},
+			}),
+			stripeClient.accountLinks.create({
+				account: user.id,
+				type: "account_onboarding",
+				return_url: "http://localhost:3333",
+				refresh_url: "http://locahost:3333",
+			}),
+		]);
 
 		return accountLink;
 	} catch (error) {

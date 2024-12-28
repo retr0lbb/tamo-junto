@@ -1,11 +1,15 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { stripeClient } from "../lib/payment";
+import donationEvent from "../events/emiters/donation.events";
+import { prisma } from "../lib/prisma";
+import { env } from "../lib/env";
 
 export async function ListenWebHookHandler(
 	request: FastifyRequest,
 	reply: FastifyReply,
 ) {
 	const sig = request.headers["stripe-signature"];
+
 	if (!sig) {
 		return reply.status(400).send({ message: "no sig founded" });
 	}
@@ -19,7 +23,7 @@ export async function ListenWebHookHandler(
 		const event = stripeClient.webhooks.constructEvent(
 			request.rawBody,
 			sig,
-			"whsec_0ca6a9c38f0a48538da00101f2effd38b28e3f4855f3b92e6322415e38256548",
+			env.STRIPE_WEBHOOK_SECRET,
 		);
 
 		switch (event.type) {
@@ -30,7 +34,11 @@ export async function ListenWebHookHandler(
 					return;
 				}
 				if (account.requirements.currently_due?.length === 0) {
-					console.log("conta ja completou o onboarding");
+					const fundedUser = await prisma.user.findUnique({
+						where: {
+							stripeID: account.id,
+						},
+					});
 				}
 				break;
 			}

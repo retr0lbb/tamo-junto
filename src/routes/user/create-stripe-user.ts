@@ -29,6 +29,7 @@ export async function CreateStripeUSerHandler(
 			email: user.email,
 			firstName,
 			lastName,
+			userId,
 		});
 
 		return reply.status(200).send({ something });
