@@ -29,7 +29,10 @@ export async function createDonationHandler(
 
 		return reply.status(201).send({
 			message: "donation computed with sucess",
-			data: donation,
+			data: {
+				paymentUrl: donation.url,
+				paymentInfo: { ...donation },
+			},
 		});
 	} catch (error) {
 		console.log(error);

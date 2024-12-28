@@ -39,6 +39,8 @@ export async function ListenWebHookHandler(
 							stripeID: account.id,
 						},
 					});
+
+					console.log(fundedUser);
 				}
 				break;
 			}

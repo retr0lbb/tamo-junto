@@ -3,7 +3,11 @@ import { Prisma as PrismaClient } from "@prisma/client";
 import { NotFound } from "../_errors/notFoundError";
 import { ClientError } from "../_errors/clientError";
 import donationEvent from "../events/emiters/donation.events";
-import { confirmPaymentIntent, generatePaymentIntent } from "../lib/payment";
+import {
+	confirmPaymentIntent,
+	generatePaymentIntent,
+	generatePaymentSession,
+} from "../lib/payment";
 
 // biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class DonationModel {
@@ -81,17 +85,13 @@ export class DonationModel {
 				},
 			}),
 
-			generatePaymentIntent({
+			generatePaymentSession({
 				amount: data.donnationAmmount,
-				currency: "brl",
+				campaingName: campaing.name,
 				campaingOwnerStripeId: campaing.User.stripeID,
+				currency: "brl",
 			}),
 		]);
-
-		confirmPaymentIntent({
-			payment_method: "Card",
-			paymentIntentId: paymentData.id ?? "",
-		});
 
 		donationEvent.emitCheckIfMilestoneIsCompleted(
 			campaing.id,

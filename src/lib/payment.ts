@@ -1,39 +1,80 @@
 import { Stripe } from "stripe";
 import { env } from "./env";
-import { never } from "zod";
-import { availableMemory, throwDeprecation } from "node:process";
 import { prisma } from "./prisma";
 
 export const stripeClient = new Stripe(env.STRIPE_KEY, {});
 
-interface Props extends Stripe.PaymentIntentCreateParams {}
+function calculateReducedFee(
+	amountInCents: number,
+	stripeFeePercentage = 0.029,
+	stripeFixedFeeInCents = 50,
+	reducedFeePercentage = 0.005,
+) {
+	// Calcula o valor das taxas da Stripe
+	const stripeFees =
+		Math.ceil(amountInCents * stripeFeePercentage) + stripeFixedFeeInCents;
+
+	// Calcula a taxa reduzida (sua comissão)
+	let reducedFee = Math.ceil(
+		(amountInCents - stripeFees) * reducedFeePercentage,
+	);
+
+	// Garante que a reducedFee nunca será menor que stripeFees
+	if (reducedFee < stripeFees) {
+		reducedFee = stripeFees;
+	}
+
+	// Calcula o valor líquido após todas as taxas
+	const netAmount = amountInCents - stripeFees - reducedFee;
+
+	return { netAmount, reducedFee, stripeFees };
+}
 
 export async function generatePaymentSession({
+	amount,
+	campaingOwnerStripeId,
+	currency,
 	campaingName,
-	price,
-}: { price: number; campaingName: string }) {
-	const paymentSession = await stripeClient.checkout.sessions.create({
-		payment_method_types: ["card"],
-		line_items: [
-			{
-				price_data: {
-					currency: "brl",
-					product_data: {
-						name: campaingName,
-						description: "voce esta fazendo uma doacao a campanha selecionada",
+}: {
+	amount: number;
+	campaingOwnerStripeId: string;
+	currency: string;
+	campaingName: string;
+}) {
+	try {
+		const { reducedFee } = calculateReducedFee(amount * 100);
+		const paymentSession = await stripeClient.checkout.sessions.create({
+			payment_method_types: ["card"],
+			line_items: [
+				{
+					price_data: {
+						currency: currency || "brl", // Moeda
+						product_data: {
+							name: campaingName,
+							description:
+								"Você está fazendo uma doação à campanha selecionada",
+						},
+						unit_amount: amount * 100, // Valor ajustado com as taxas
 					},
-					unit_amount: price * 100,
+					quantity: 1,
 				},
-				quantity: 1,
+			],
+			payment_intent_data: {
+				application_fee_amount: reducedFee,
+				transfer_data: {
+					destination: campaingOwnerStripeId,
+				},
 			},
-		],
-		ui_mode: "embedded",
-		mode: "payment",
-		success_url: undefined,
-		redirect_on_completion: "never",
-	});
+			mode: "payment",
+			success_url: "https://seusite.com/sucesso",
+			cancel_url: "https://seusite.com/cancelamento",
+		});
 
-	return paymentSession;
+		return paymentSession;
+	} catch (error) {
+		console.error("Erro ao criar a sessão de pagamento:", error);
+		throw new Error("Não foi possível criar a sessão de pagamento.");
+	}
 }
 
 export interface GeneratePaymentIntentProps {
