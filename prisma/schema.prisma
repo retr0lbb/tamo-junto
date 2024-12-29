@@ -45,7 +45,7 @@ model Donation{
   id String @id @default(uuid())
   donationDate DateTime @default(now())
   donationAmmount Decimal
-
+  taxfeeOfDonation Decimal?
   status Boolean @default(false)
 
   User User? @relation(fields: [Userid], references: [id])

@@ -26,7 +26,7 @@ class EmailConsumer {
 				throw new ClientError("No user found");
 			}
 
-			if (user.stripeID || user.stripeID.length >= 0) {
+			if (!user.stripeID || user.stripeID.length >= 0) {
 				throw new ClientError("User Already has stripeID");
 			}
 

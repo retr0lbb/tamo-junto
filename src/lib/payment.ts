@@ -2,15 +2,16 @@ import { Stripe } from "stripe";
 import { env } from "./env";
 import { prisma } from "./prisma";
 
-export const stripeClient = new Stripe(env.STRIPE_KEY, {});
+export const stripeClient = new Stripe(env.STRIPE_KEY, {
+	typescript: true,
+});
 
-function calculateReducedFee(
+export function calculateReducedFee(
 	amountInCents: number,
 	stripeFeePercentage = 0.029,
 	stripeFixedFeeInCents = 50,
-	reducedFeePercentage = 0.005,
+	reducedFeePercentage = 0.01,
 ) {
-	// Calcula o valor das taxas da Stripe
 	const stripeFees =
 		Math.ceil(amountInCents * stripeFeePercentage) + stripeFixedFeeInCents;
 
@@ -21,13 +22,10 @@ function calculateReducedFee(
 
 	// Garante que a reducedFee nunca será menor que stripeFees
 	if (reducedFee < stripeFees) {
-		reducedFee = stripeFees;
+		reducedFee = Math.ceil(stripeFees * 1.01);
 	}
 
-	// Calcula o valor líquido após todas as taxas
-	const netAmount = amountInCents - stripeFees - reducedFee;
-
-	return { netAmount, reducedFee, stripeFees };
+	return { reducedFee, stripeFees };
 }
 
 export async function generatePaymentSession({
@@ -43,8 +41,8 @@ export async function generatePaymentSession({
 }) {
 	try {
 		const { reducedFee } = calculateReducedFee(amount * 100);
+		console.log(`valor da taxa da plataforma reduzida ${reducedFee}`);
 		const paymentSession = await stripeClient.checkout.sessions.create({
-			payment_method_types: ["card"],
 			line_items: [
 				{
 					price_data: {
@@ -66,8 +64,8 @@ export async function generatePaymentSession({
 				},
 			},
 			mode: "payment",
-			success_url: "https://seusite.com/sucesso",
-			cancel_url: "https://seusite.com/cancelamento",
+			success_url: "https://youtube.com",
+			cancel_url: "https://e621.com",
 		});
 
 		return paymentSession;
@@ -77,56 +75,13 @@ export async function generatePaymentSession({
 	}
 }
 
-export interface GeneratePaymentIntentProps {
-	amount: number;
-	campaingOwnerStripeId: string;
-	currency: "usd" | "brl";
-}
-export async function generatePaymentIntent({
-	amount,
-	campaingOwnerStripeId,
-	currency,
-}: GeneratePaymentIntentProps) {
-	try {
-		const paymentIntent = await stripeClient.paymentIntents.create(
-			{
-				amount: amount * 100,
-				currency,
-				payment_method_types: ["card"],
-				application_fee_amount: Math.round(amount * 100 * 0.005),
-				transfer_data: {
-					destination: campaingOwnerStripeId,
-				},
-			},
-			{ timeout: 10000 },
-		);
-
-		return paymentIntent;
-	} catch (error) {
-		console.log(error);
-		throw new Error("Não foi possível criar o PaymentIntent.");
-	}
-}
-
-export async function confirmPaymentIntent(data: {
-	paymentIntentId: string;
-	payment_method: string;
-}) {
-	try {
-		const confirmedIntent = await stripeClient.paymentIntents.confirm(
-			data.paymentIntentId,
-		);
-	} catch (error) {
-		console.log(error);
-		throw error;
-	}
-}
-
 interface createStripeRelatedUserParams {
 	userId: string;
 	email: string;
 	firstName: string;
 	lastName: string;
+	originForward: string;
+	originRefresh: string;
 }
 
 export async function createStripeRelatedUser({
@@ -164,7 +119,7 @@ export async function createStripeRelatedUser({
 			stripeClient.accountLinks.create({
 				account: user.id,
 				type: "account_onboarding",
-				return_url: "http://localhost:3333",
+				return_url: "",
 				refresh_url: "http://locahost:3333",
 			}),
 		]);

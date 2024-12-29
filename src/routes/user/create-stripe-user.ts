@@ -30,6 +30,8 @@ export async function CreateStripeUSerHandler(
 			firstName,
 			lastName,
 			userId,
+			originForward: `${request.headers.origin}/return/${userId}`,
+			originRefresh: `${request.headers.origin}/refresh/${userId}`,
 		});
 
 		return reply.status(200).send({ something });

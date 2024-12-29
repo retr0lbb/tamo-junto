@@ -44,9 +44,16 @@ export async function ListenWebHookHandler(
 				}
 				break;
 			}
-			default:
-				console.log("not expected");
-				console.log(event.type);
+			case "payment_link.created":
+				console.log("pagamento sucedido");
+				break;
+			case "payment_intent.created":
+				console.log("pagamento sucedido 2");
+				break;
+
+			case "checkout.session.completed":
+				console.log("memes222");
+				break;
 		}
 	} catch (error) {
 		console.log(error);

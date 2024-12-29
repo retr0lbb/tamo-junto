@@ -13,3 +13,5 @@ build
 server.crt
 server.csr
 server.key
+
+prisma/dev.db
