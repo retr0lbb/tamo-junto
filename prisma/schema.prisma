@@ -46,6 +46,9 @@ model Donation{
   donationDate DateTime @default(now())
   donationAmmount Decimal
   taxfeeOfDonation Decimal?
+
+  stripePaymentId String @unique()
+  
   status Boolean @default(false)
 
   User User? @relation(fields: [Userid], references: [id])

@@ -4,8 +4,8 @@ import { NotFound } from "../_errors/notFoundError";
 import { ClientError } from "../_errors/clientError";
 import donationEvent from "../events/emiters/donation.events";
 import { generatePaymentSession, calculateReducedFee } from "../lib/payment";
-import { errorMonitor } from "node:events";
 import { ServerError } from "../_errors/serverError";
+import { prisma } from "../lib/prisma";
 
 // biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class DonationModel {
@@ -37,12 +37,17 @@ export class DonationModel {
 				},
 				select: {
 					donationAmmount: true,
+					taxfeeOfDonation: true,
 				},
 			});
 
 			const totalCollectedValueOfCampaing = donationsArray.reduce(
 				(acc, donation) => {
-					return acc.plus(donation.donationAmmount);
+					return acc.plus(
+						donation.donationAmmount.minus(
+							donation.taxfeeOfDonation?.toNumber() ?? 0,
+						),
+					);
 				},
 				new PrismaClient.Decimal(0),
 			);
@@ -76,33 +81,44 @@ export class DonationModel {
 
 			const { reducedFee } = calculateReducedFee(data.donnationAmmount * 100);
 
-			const [donation, paymentData] = await Promise.all([
-				db.donation.create({
-					data: {
-						donationAmmount: data.donnationAmmount,
-						taxfeeOfDonation: reducedFee,
-						Campaingid: data.campaingId,
-						Userid: data.userId,
-						status: false,
-					},
-				}),
+			const paymentData = await generatePaymentSession({
+				amount: data.donnationAmmount,
+				campaingName: campaing.name,
+				campaingOwnerStripeId: campaing.User.stripeID,
+				currency: "brl",
+			});
 
-				generatePaymentSession({
-					amount: data.donnationAmmount,
-					campaingName: campaing.name,
-					campaingOwnerStripeId: campaing.User.stripeID,
-					currency: "brl",
-				}),
-			]);
+			const hasDonationWithStripeIdAlready = await prisma.donation.findUnique({
+				where: {
+					stripePaymentId: paymentData.id,
+				},
+			});
+
+			if (hasDonationWithStripeIdAlready) {
+				throw new ClientError(
+					"An donation with this stripeId already exists call the owner of the website to resolve it",
+				);
+			}
+			const donation = await db.donation.create({
+				data: {
+					donationAmmount: data.donnationAmmount,
+					taxfeeOfDonation: reducedFee,
+					Campaingid: data.campaingId,
+					Userid: data.userId,
+					status: false,
+					stripePaymentId: paymentData.id,
+				},
+			});
 
 			donationEvent.emitCheckIfMilestoneIsCompleted(
 				campaing.id,
 				totalCollectedValueOfCampaing.toNumber() + data.donnationAmmount,
 			);
 
+			console.log(paymentData.id);
+
 			return paymentData;
 		} catch (error) {
-			// biome-ignore lint/complexity/noUselessCatch: <explanation>
 			throw new ServerError("Cannot process payment");
 		}
 	}
