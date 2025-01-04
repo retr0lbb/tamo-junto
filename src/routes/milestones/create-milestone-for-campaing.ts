@@ -25,7 +25,7 @@ export async function createMilestoneHandler(
 	const { minDonation, objectiveAmmount, description, name } =
 		createMilestoneSchema.parse(request.body);
 
-	const milestone = await Milestone.createMilestone(prisma, {
+	const milestone = await new Milestone(prisma).createMilestone({
 		campaingId: id,
 		name,
 		objectiveAmmount,

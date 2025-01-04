@@ -1,8 +1,9 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
-import { Prisma as PrismaClient } from "@prisma/client";
 import z from "zod";
 import { requestUser } from "../../lib/request-user-jwt";
+import { Milestone } from "../../models/milestone.model";
+import { ClientError } from "../../_errors/clientError";
 
 const getMilestoneWinnersRouteParams = z.object({
 	milestoneId: z.string().uuid(),
@@ -15,54 +16,31 @@ export async function getMilestoneWinnersHandler(
 	const { milestoneId } = getMilestoneWinnersRouteParams.parse(request.params);
 	const { id: userId } = requestUser.parse(request.user);
 
-	const milestone = await prisma.milestone.findUnique({
-		where: {
-			id: milestoneId,
-		},
-		include: {
-			Campaing: true,
-		},
+	const milestone = await new Milestone(prisma).getMilestone({
+		id: milestoneId,
 	});
 
 	if (!milestone) {
 		return reply.status(404).send({ message: "Milestone not found" });
 	}
 
-	if (userId !== milestone.Campaing?.Userid) {
+	if (!milestone.Campaingid) {
+		throw new ClientError("Milestone must have a campaing on their own");
+	}
+
+	const campaing = await prisma.campaing.findUnique({
+		where: {
+			id: milestone.Campaingid,
+		},
+	});
+
+	if (!campaing?.Userid || userId !== campaing.Userid) {
 		return reply
 			.status(403)
-			.send({ message: "Only campaing owner can see winners" });
+			.send({ message: "Campaing ID different then user ID" });
 	}
 
-	const winners = await prisma.userAchievedMilestone.findMany({
-		where: {
-			Milestoneid: milestoneId,
-		},
-		include: {
-			User: {
-				include: { Donations: true },
-			},
-		},
-	});
-
-	if (winners.length <= 0) {
-		return reply
-			.status(200)
-			.send({ message: "nobody have achieved the metrics for this goal" });
-	}
-	const data = winners.map((winner) => {
-		if (winner?.User) {
-			return {
-				winnerName: winner.User.name,
-				winnerEmail: winner.User.email,
-				addressInfo: winner.User.addressInfo,
-				donations: winner.User.Donations.reduce(
-					(acc, item) => acc + item.donationAmmount.toNumber(),
-					0,
-				),
-			};
-		}
-	});
+	const data = await new Milestone(prisma).getMilestoneWinners(milestone.id);
 	return reply.status(200).send({ data: data });
 }
 

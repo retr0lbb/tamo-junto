@@ -10,10 +10,11 @@ interface MilestoneProps {
 	objectiveAmmount: number;
 }
 
-// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class Milestone {
-	static async getMilestone(db: PrismaClient, { id }: { id: string }) {
-		const milestone = await db.milestone.findUniqueOrThrow({
+	constructor(private db: PrismaClient) {}
+
+	async getMilestone({ id }: { id: string }) {
+		const milestone = await this.db.milestone.findUniqueOrThrow({
 			where: {
 				id,
 			},
@@ -21,10 +22,7 @@ export class Milestone {
 
 		return milestone;
 	}
-	static async getMilestonesByCampaingId(
-		db: PrismaClient,
-		{ id }: { id: string },
-	) {
+	async getMilestonesByCampaingId(db: PrismaClient, { id }: { id: string }) {
 		const milestones = await db.milestone.findMany({
 			where: {
 				Campaingid: id,
@@ -34,98 +32,141 @@ export class Milestone {
 		return milestones;
 	}
 
-	static async createMilestone(
-		db: PrismaClient,
+	async createMilestone(
 		data: MilestoneProps & { campaingId: string; userId: string },
 	) {
-		const campaing = await prisma.campaing.findUnique({
-			where: {
-				id: data.campaingId,
-			},
-		});
-
-		if (!campaing) {
-			throw new NotFound("Campaing not found");
-		}
-
-		if (campaing.Userid !== data.userId) {
-			throw new ClientError(
-				"You can't create a milestone on an Campaing thats not yours",
-			);
-		}
-
-		if (campaing.goal.comparedTo(data.objectiveAmmount) === -1) {
-			throw new ClientError(
-				"Can't create a milestone that surpass the campaing goal!",
-			);
-		}
-
-		if (
-			data.minDonation !== null &&
-			campaing.goal.comparedTo(data.minDonation) === -1
-		) {
-			throw new ClientError(
-				"Can't add a minimum value that's over the campaing goal",
-			);
-		}
-
-		const [donatios, existisMilestone] = await Promise.all([
-			db.donation.findMany({
+		try {
+			const campaing = await prisma.campaing.findUnique({
 				where: {
-					Campaingid: data.campaingId,
+					id: data.campaingId,
 				},
-				select: {
-					donationAmmount: true,
-				},
-			}),
-			db.milestone.findUnique({
-				where: {
-					campaing_milestone_cap: {
-						objectiveAmmount: data.objectiveAmmount,
+			});
+
+			if (!campaing) {
+				throw new NotFound("Campaing not found");
+			}
+
+			if (campaing.Userid !== data.userId) {
+				throw new ClientError(
+					"You can't create a milestone on an Campaing thats not yours",
+				);
+			}
+
+			if (campaing.goal.comparedTo(data.objectiveAmmount) <= -1) {
+				throw new ClientError(
+					"Can't create a milestone that surpass the campaing goal!",
+				);
+			}
+
+			if (
+				data.minDonation !== null &&
+				campaing.goal.comparedTo(data.minDonation) <= -1
+			) {
+				throw new ClientError(
+					"Can't add a minimum value that's over the campaing goal",
+				);
+			}
+
+			const [donatios, existisMilestone] = await Promise.all([
+				this.db.donation.findMany({
+					where: {
 						Campaingid: data.campaingId,
 					},
+					select: {
+						donationAmmount: true,
+					},
+				}),
+				this.db.milestone.findUnique({
+					where: {
+						campaing_milestone_cap: {
+							objectiveAmmount: data.objectiveAmmount,
+							Campaingid: data.campaingId,
+						},
+					},
+				}),
+			]);
+
+			if (existisMilestone !== null) {
+				throw new ClientError(
+					"A milestone with this objective already exists in this campaing",
+				);
+			}
+
+			const totalDonationsSum = donatios.reduce(
+				(acc, item) => acc + item.donationAmmount.toNumber(),
+				0,
+			);
+
+			if (totalDonationsSum >= data.objectiveAmmount) {
+				return new ClientError(
+					"Cannot create a milestone objective that's lower than total collected money",
+				);
+			}
+
+			const milestone = await this.db.milestone.create({
+				data: {
+					minDonation: data.minDonation ?? 0,
+					objectiveAmmount: data.objectiveAmmount,
+					name: data.name,
+					Campaingid: data.campaingId,
+					description: data.description,
 				},
-			}),
-		]);
+			});
 
-		if (existisMilestone !== null) {
-			throw new ClientError(
-				"A milestone with this objective already exists in this campaing",
-			);
+			return milestone;
+		} catch (error) {
+			console.log(error);
+			throw error;
 		}
-
-		const totalDonationsSum = donatios.reduce(
-			(acc, item) => acc + item.donationAmmount.toNumber(),
-			0,
-		);
-
-		if (totalDonationsSum >= data.objectiveAmmount) {
-			return new ClientError(
-				"Cannot create a milestone objective that's lower than total collected money",
-			);
-		}
-
-		const milestone = await db.milestone.create({
-			data: {
-				minDonation: data.minDonation ?? 0,
-				objectiveAmmount: data.objectiveAmmount,
-				name: data.name,
-				Campaingid: data.campaingId,
-				description: data.description,
-			},
-		});
-
-		return milestone;
 	}
 
-	static async verifyIfThisMilestoneDontAlreadyExists(
-		db: PrismaClient,
-		{ goal, campaingId }: { goal: number; campaingId: string },
-	) {
-		const milestones = await db.milestone.findFirst({
+	async verifyIfThisMilestoneDontAlreadyExists({
+		goal,
+		campaingId,
+	}: { goal: number; campaingId: string }) {
+		const milestones = await this.db.milestone.findFirst({
 			where: { Campaingid: campaingId, objectiveAmmount: goal },
 		});
 
 		return milestones;
+	}
+
+	async getMilestoneWinners(milestoneID: string) {
+		try {
+			const winners = await this.db.userAchievedMilestone.findMany({
+				where: {
+					Milestoneid: milestoneID,
+				},
+				include: {
+					User: {
+						include: {
+							Donations: true,
+						},
+					},
+				},
+			});
+
+			if (winners.length <= 0) {
+				return [];
+			}
+
+			const data = winners.map((winner) => {
+				if (winner.User) {
+					return {
+						winnerName: winner.User.name,
+						winnerEmail: winner.User.email,
+						addressInfo: winner.User.addressInfo,
+						donations: winner.User.Donations.reduce(
+							(acc, item) => acc + item.donationAmmount.toNumber(),
+							0,
+						),
+					};
+				}
+			});
+
+			return data;
+		} catch (error) {
+			throw new Error("An error occured at get milestone winners");
+		}
 	}
 }
