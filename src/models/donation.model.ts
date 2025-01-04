@@ -7,8 +7,9 @@ import { generatePaymentSession, calculateReducedFee } from "../lib/payment";
 import { ServerError } from "../_errors/serverError";
 import { prisma } from "../lib/prisma";
 
-// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class DonationModel {
+	constructor(private db: PrismaClientDb) {}
+
 	static async donateToCampaing(
 		db: PrismaClientDb,
 		data: { campaingId: string; userId: string; donnationAmmount: number },
@@ -121,5 +122,52 @@ export class DonationModel {
 		} catch (error) {
 			throw new ServerError("Cannot process payment");
 		}
+	}
+
+	static async getTotalDonatedValueToACampaing(
+		db: PrismaClientDb,
+		data: { campaingId: string },
+	) {
+		const donationsArray = await db.donation.findMany({
+			where: {
+				Campaingid: data.campaingId,
+			},
+		});
+
+		const filteredArray = donationsArray.filter(
+			(status) => status.status === true,
+		);
+
+		const unConfirmedArray = donationsArray.filter(
+			(status) => status.status === false,
+		);
+
+		const totalValidValueArrecadated = filteredArray.reduce((acc, donation) => {
+			return acc.plus(donation.donationAmmount);
+		}, new PrismaClient.Decimal(0));
+
+		const totalUnConfirmedValueArrecadated = unConfirmedArray.reduce(
+			(acc, donation) => {
+				return acc.plus(donation.donationAmmount);
+			},
+			new PrismaClient.Decimal(0),
+		);
+
+		const returnValue = {
+			confirmedPaymentsValue: totalValidValueArrecadated,
+			unConfirmedPaymentsValue: totalUnConfirmedValueArrecadated,
+		};
+
+		return returnValue;
+	}
+
+	async getAllCampaingDonations({ campainId }: { campainId: string }) {
+		const donations = await this.db.donation.findMany({
+			where: {
+				Campaingid: campainId,
+			},
+		});
+
+		return donations;
 	}
 }

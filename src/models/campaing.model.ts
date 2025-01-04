@@ -2,13 +2,11 @@ import type { PrismaClient } from "@prisma/client";
 import { ClientError } from "../_errors/clientError";
 import { NotFound } from "../_errors/notFoundError";
 
-// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class Campaing {
-	static async createCampaing(
-		db: PrismaClient,
-		data: { name: string; Userid: string; goal: number },
-	) {
-		const user = await db.user.findUniqueOrThrow({
+	constructor(private db: PrismaClient) {}
+
+	async createCampaing(data: { name: string; Userid: string; goal: number }) {
+		const user = await this.db.user.findUniqueOrThrow({
 			where: {
 				id: data.Userid,
 			},
@@ -20,7 +18,7 @@ export class Campaing {
 			);
 		}
 
-		const result = await db.campaing.create({
+		const result = await this.db.campaing.create({
 			data: {
 				goal: data.goal,
 				name: data.name,
@@ -31,48 +29,35 @@ export class Campaing {
 		return result;
 	}
 
-	static async deleteCampaing(
-		db: PrismaClient,
-		data: { id: string; userId: string },
-	) {
-		try {
-			const campaing = await db.campaing.findUnique({
-				where: {
-					id: data.id,
-				},
-				select: {
-					goal: true,
-					id: true,
-					name: true,
-					Userid: true,
-				},
-			});
+	async deleteCampaing(data: { id: string; userId: string }) {
+		const campaing = await this.db.campaing.findUnique({
+			where: {
+				id: data.id,
+			},
+			select: { Userid: true },
+		});
 
-			if (!campaing) {
-				throw new NotFound("Campaing not found");
-			}
-
-			if (data.userId !== campaing.Userid) {
-				throw new ClientError(
-					"Cannot delete a campaing thats not created by you",
-				);
-			}
-
-			const result = await db.campaing.delete({
-				where: {
-					id: data.id,
-				},
-			});
-
-			return result;
-		} catch (error) {
-			// biome-ignore lint/complexity/noUselessCatch: <explanation>
-			throw error;
+		if (!campaing) {
+			throw new NotFound("Campaing not found");
 		}
+
+		if (data.userId !== campaing.Userid) {
+			throw new ClientError(
+				"Cannot delete a campaing thats not created by you",
+			);
+		}
+
+		const result = await this.db.campaing.delete({
+			where: {
+				id: data.id,
+			},
+		});
+
+		return result;
 	}
 
-	static async getCampaing(db: PrismaClient, data: { id: string }) {
-		const result = await db.campaing.findUnique({
+	async getCampaing(data: { id: string }) {
+		const result = await this.db.campaing.findUnique({
 			where: {
 				id: data.id,
 			},
@@ -87,8 +72,8 @@ export class Campaing {
 		return result;
 	}
 
-	static async verifyIfCampaingExists(db: PrismaClient, data: { id: string }) {
-		const exits = await db.campaing.findUnique({
+	async verifyIfCampaingExists(data: { id: string }) {
+		const exits = await this.db.campaing.findUnique({
 			where: {
 				id: data.id,
 			},
@@ -97,12 +82,12 @@ export class Campaing {
 		return exits;
 	}
 
-	static async getCampaingsByPage(
-		db: PrismaClient,
-		{ page = 0, user = undefined }: { page?: number; user?: string },
-	) {
+	async getCampaingsByPage({
+		page = 0,
+		user = undefined,
+	}: { page?: number; user?: string }) {
 		const resultsPerPage = 10;
-		const campaings = await db.campaing.findMany({
+		const campaings = await this.db.campaing.findMany({
 			select: {
 				id: true,
 				name: true,
@@ -118,11 +103,8 @@ export class Campaing {
 		return campaings;
 	}
 
-	static async updateCampaing(
-		db: PrismaClient,
-		data: { id: string; name: string; goal: number },
-	) {
-		const updatedCampaing = await db.campaing.update({
+	async updateCampaing(data: { id: string; name: string; goal: number }) {
+		const updatedCampaing = await this.db.campaing.update({
 			where: {
 				id: data.id,
 			},

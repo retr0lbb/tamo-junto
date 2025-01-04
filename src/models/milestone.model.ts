@@ -22,8 +22,8 @@ export class Milestone {
 
 		return milestone;
 	}
-	async getMilestonesByCampaingId(db: PrismaClient, { id }: { id: string }) {
-		const milestones = await db.milestone.findMany({
+	async getMilestonesByCampaingId({ id }: { id: string }) {
+		const milestones = await this.db.milestone.findMany({
 			where: {
 				Campaingid: id,
 			},

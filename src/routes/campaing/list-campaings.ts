@@ -18,7 +18,10 @@ export async function listCampaingsHandler(
 ) {
 	const { user, page } = queryParams.parse(request.query);
 
-	const campaings = await Campaing.getCampaingsByPage(prisma, { page, user });
+	const campaings = await new Campaing(prisma).getCampaingsByPage({
+		page,
+		user,
+	});
 
 	if (campaings.length <= 0) {
 		return reply.status(404).send({ message: "no campaings left" });

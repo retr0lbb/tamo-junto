@@ -17,7 +17,7 @@ export async function deleteCampaingHandler(
 	const { id: userId } = requestUser.parse(request.user);
 
 	try {
-		const deletedCampaing = await Campaing.deleteCampaing(prisma, {
+		const deletedCampaing = await new Campaing(prisma).deleteCampaing({
 			id,
 			userId,
 		});

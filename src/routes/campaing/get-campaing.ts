@@ -4,6 +4,7 @@ import z from "zod";
 import { Prisma as PrismaClient } from "@prisma/client";
 import { Campaing } from "../../models/campaing.model";
 import { Milestone } from "../../models/milestone.model";
+import { DonationModel } from "../../models/donation.model";
 
 const getCampaingRouteParams = z.object({
 	id: z.string().uuid(),
@@ -15,26 +16,26 @@ export async function getCampaingHandler(
 ) {
 	const { id } = getCampaingRouteParams.parse(request.params);
 
-	const campaing = await Campaing.getCampaing(prisma, { id });
+	const campaing = await new Campaing(prisma).getCampaing({ id });
+
 	if (!campaing) {
 		return reply.status(404).send({ message: "Campaing not found" });
 	}
 
 	const [milestones, donations] = await Promise.all([
-		Milestone.getMilestonesByCampaingId(prisma, { id }),
-		prisma.donation.findMany({
-			where: {
-				Campaingid: id,
-			},
+		new Milestone(prisma).getMilestonesByCampaingId({ id }),
+		new DonationModel(prisma).getAllCampaingDonations({
+			campainId: id,
 		}),
 	]);
 
-	const totalCollectedValueOfCampaing = donations.reduce((acc, donation) => {
-		return acc.plus(donation.donationAmmount);
-	}, new PrismaClient.Decimal(0));
+	const { confirmedPaymentsValue, unConfirmedPaymentsValue } =
+		await DonationModel.getTotalDonatedValueToACampaing(prisma, {
+			campaingId: id,
+		});
 
 	const percentageOfCompletion = (
-		(totalCollectedValueOfCampaing.toNumber() / campaing.goal.toNumber()) *
+		(confirmedPaymentsValue.toNumber() / campaing.goal.toNumber()) *
 		100
 	).toFixed(2);
 
@@ -42,7 +43,8 @@ export async function getCampaingHandler(
 		campaingId: campaing.id,
 		title: campaing.name,
 		goal: campaing.goal,
-		totalDonated: totalCollectedValueOfCampaing,
+		totalPaidValues: confirmedPaymentsValue,
+		unCompletedPaymentValues: unConfirmedPaymentsValue,
 		completion: percentageOfCompletion,
 		milestones: milestones.map((milestone) => {
 			return {
@@ -51,15 +53,14 @@ export async function getCampaingHandler(
 				minDonation: milestone.minDonation,
 			};
 		}),
-		donations: donations
-			? donations.map((donate) => {
-					return {
-						id: donate.id,
-						date: donate.donationDate,
-						ammount: donate.donationAmmount,
-					};
-				})
-			: [],
+		donations: donations.map((donate) => {
+			return {
+				id: donate.id,
+				date: donate.donationDate,
+				ammount: donate.donationAmmount,
+				completed: `${donate.status ? "Paid" : "Unpaid"}`,
+			};
+		}),
 	};
 
 	return reply.status(200).send({ data: betterCampaingObject });

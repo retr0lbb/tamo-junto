@@ -21,7 +21,7 @@ export async function updateCampaingHandler(
 	const { id: userId } = requestUser.parse(request.user);
 	const { goal, name } = updateCampaingSchema.parse(request.body);
 
-	const campaing = await Campaing.verifyIfCampaingExists(prisma, { id });
+	const campaing = await new Campaing(prisma).verifyIfCampaingExists({ id });
 
 	if (!campaing) {
 		return reply.status(404).send({ message: "Campaing not found" });
@@ -33,7 +33,7 @@ export async function updateCampaingHandler(
 			.send({ message: "Only the creator of this campaing can update it" });
 	}
 
-	const result = await Campaing.updateCampaing(prisma, {
+	const result = await new Campaing(prisma).updateCampaing({
 		goal,
 		id,
 		name,

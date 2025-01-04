@@ -19,7 +19,7 @@ export async function createCampaingHandler(
 	);
 	const { id: userId } = requestUser.parse(request.user);
 	try {
-		const campaing = await Campaing.createCampaing(prisma, {
+		const campaing = await new Campaing(prisma).createCampaing({
 			goal: campaingObjectiveAmmount,
 			name: campaingName,
 			Userid: userId,
