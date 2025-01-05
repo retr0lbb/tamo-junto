@@ -9,10 +9,11 @@ interface UserInterface {
 	password: string;
 }
 
-// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class UserModel {
-	static async gerUserDonations(db: PrismaClient, { id }: { id: string }) {
-		const user = await db.user.findUnique({
+	constructor(private db: PrismaClient) {}
+
+	async gerUserDonations({ id }: { id: string }) {
+		const user = await this.db.user.findUnique({
 			where: { id },
 		});
 
@@ -20,7 +21,7 @@ export class UserModel {
 			throw new ClientError("User cannot be found");
 		}
 
-		const donations = await db.campaing.findMany({
+		const donations = await this.db.campaing.findMany({
 			where: {
 				donations: {
 					some: {
@@ -52,21 +53,18 @@ export class UserModel {
 		return donations;
 	}
 
-	static async createUser(
-		db: PrismaClient,
-		{ addressInfo, email, name, password }: UserInterface,
-	) {
-		const isUserInDatabaseAlready = await db.user.findUnique({
+	async createUser({ addressInfo, email, name, password }: UserInterface) {
+		const isUserInDatabaseAlready = await this.db.user.findUnique({
 			where: {
 				email,
 			},
 		});
 
 		if (isUserInDatabaseAlready !== null) {
-			throw new Error("User already exists");
+			throw new ClientError("An user with this email already exists");
 		}
 
-		const insertedUser = await db.user.create({
+		const insertedUser = await this.db.user.create({
 			data: {
 				email,
 				name,
@@ -81,12 +79,12 @@ export class UserModel {
 		return insertedUser;
 	}
 
-	static async logInUser(
-		db: PrismaClient,
-		{ email, password }: Omit<UserInterface, "addressInfo" | "name">,
-	) {
+	async logInUser({
+		email,
+		password,
+	}: Omit<UserInterface, "addressInfo" | "name">) {
 		try {
-			const user = await db.user.findUnique({
+			const user = await this.db.user.findUnique({
 				where: {
 					email: email,
 				},
@@ -109,8 +107,8 @@ export class UserModel {
 		}
 	}
 
-	static async deleteUser(db: PrismaClient, data: { id: string }) {
-		const user = await db.user.findUnique({
+	async deleteUser(data: { id: string }) {
+		const user = await this.db.user.findUnique({
 			where: { id: data.id },
 		});
 
