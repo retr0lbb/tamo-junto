@@ -3,8 +3,8 @@ import { prisma } from "../../lib/prisma";
 import { Prisma as PrismaClient } from "@prisma/client";
 import z from "zod";
 import { requestUser } from "../../lib/request-user-jwt";
-import { Campaing } from "../../models/campaing.model";
-import { Milestone } from "../../models/milestone.model";
+import { CampaingModel } from "../../models/campaing.model";
+import { MilestoneModel } from "../../models/milestone.model";
 
 export const createMilestoneSchema = z.object({
 	objectiveAmmount: z.number().positive(),
@@ -25,7 +25,7 @@ export async function createMilestoneHandler(
 	const { minDonation, objectiveAmmount, description, name } =
 		createMilestoneSchema.parse(request.body);
 
-	const milestone = await new Milestone(prisma).createMilestone({
+	const milestone = await new MilestoneModel(prisma).createMilestone({
 		campaingId: id,
 		name,
 		objectiveAmmount,

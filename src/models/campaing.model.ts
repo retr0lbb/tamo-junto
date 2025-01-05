@@ -2,7 +2,7 @@ import type { PrismaClient } from "@prisma/client";
 import { ClientError } from "../_errors/clientError";
 import { NotFound } from "../_errors/notFoundError";
 
-export class Campaing {
+export class CampaingModel {
 	constructor(private db: PrismaClient) {}
 
 	async createCampaing(data: { name: string; Userid: string; goal: number }) {

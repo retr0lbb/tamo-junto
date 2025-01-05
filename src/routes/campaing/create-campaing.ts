@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
 import z from "zod";
 import { requestUser } from "../../lib/request-user-jwt";
-import { Campaing } from "../../models/campaing.model";
+import { CampaingModel } from "../../models/campaing.model";
 import { ServerError } from "../../_errors/serverError";
 
 export const createCampaingSchema = z.object({
@@ -19,7 +19,7 @@ export async function createCampaingHandler(
 	);
 	const { id: userId } = requestUser.parse(request.user);
 	try {
-		const campaing = await new Campaing(prisma).createCampaing({
+		const campaing = await new CampaingModel(prisma).createCampaing({
 			goal: campaingObjectiveAmmount,
 			name: campaingName,
 			Userid: userId,

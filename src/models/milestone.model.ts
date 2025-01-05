@@ -10,7 +10,7 @@ interface MilestoneProps {
 	objectiveAmmount: number;
 }
 
-export class Milestone {
+export class MilestoneModel {
 	constructor(private db: PrismaClient) {}
 
 	async getMilestone({ id }: { id: string }) {

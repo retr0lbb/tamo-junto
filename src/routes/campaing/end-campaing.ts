@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
 import z from "zod";
 import { requestUser } from "../../lib/request-user-jwt";
-import { Campaing } from "../../models/campaing.model";
+import { CampaingModel } from "../../models/campaing.model";
 import { ServerError } from "../../_errors/serverError";
 
 const deleteCampaingRouteParams = z.object({
@@ -17,7 +17,7 @@ export async function deleteCampaingHandler(
 	const { id: userId } = requestUser.parse(request.user);
 
 	try {
-		const deletedCampaing = await new Campaing(prisma).deleteCampaing({
+		const deletedCampaing = await new CampaingModel(prisma).deleteCampaing({
 			id,
 			userId,
 		});

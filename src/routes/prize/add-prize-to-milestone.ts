@@ -1,6 +1,8 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
 import z from "zod";
+import { MilestoneModel } from "../../models/milestone.model";
+import { PrizeModel } from "../../models/prize.model";
 
 export const createPrizeSchema = z.object({
 	prizeName: z.string().min(1),
@@ -20,24 +22,18 @@ export async function createPrizeHandler(
 
 	const { id } = createPrizeRouteParams.parse(request.params);
 
-	const milestone = await prisma.milestone.findUnique({
-		where: {
-			id,
-		},
-	});
+	const milestone = await new MilestoneModel(prisma).getMilestone({ id });
 
 	if (!milestone) {
 		return reply.status(404).send({ message: "Milesonte not found" });
 	}
 
-	const prize = await prisma.prize.create({
-		data: {
-			uri: "http://localhost:3333",
-			title: prizeName,
-			description: prizeDescription ?? "",
-			isShippingPrize: isShippingPrize,
-			Milestoneid: id,
-		},
+	const prize = await new PrizeModel(prisma).createPrize({
+		isShippingPrize,
+		milestoneId: id,
+		title: prizeName,
+		uri: "http://localhost:3333",
+		description: prizeDescription,
 	});
 
 	return reply

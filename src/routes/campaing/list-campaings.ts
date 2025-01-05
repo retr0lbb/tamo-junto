@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
 import z from "zod";
-import { Campaing } from "../../models/campaing.model";
+import { CampaingModel } from "../../models/campaing.model";
 
 const queryParams = z.object({
 	page: z
@@ -18,7 +18,7 @@ export async function listCampaingsHandler(
 ) {
 	const { user, page } = queryParams.parse(request.query);
 
-	const campaings = await new Campaing(prisma).getCampaingsByPage({
+	const campaings = await new CampaingModel(prisma).getCampaingsByPage({
 		page,
 		user,
 	});

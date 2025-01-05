@@ -2,8 +2,8 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
 import z from "zod";
 import { Prisma as PrismaClient } from "@prisma/client";
-import { Campaing } from "../../models/campaing.model";
-import { Milestone } from "../../models/milestone.model";
+import { CampaingModel } from "../../models/campaing.model";
+import { MilestoneModel } from "../../models/milestone.model";
 import { DonationModel } from "../../models/donation.model";
 
 const getCampaingRouteParams = z.object({
@@ -16,14 +16,14 @@ export async function getCampaingHandler(
 ) {
 	const { id } = getCampaingRouteParams.parse(request.params);
 
-	const campaing = await new Campaing(prisma).getCampaing({ id });
+	const campaing = await new CampaingModel(prisma).getCampaing({ id });
 
 	if (!campaing) {
 		return reply.status(404).send({ message: "Campaing not found" });
 	}
 
 	const [milestones, donations] = await Promise.all([
-		new Milestone(prisma).getMilestonesByCampaingId({ id }),
+		new MilestoneModel(prisma).getMilestonesByCampaingId({ id }),
 		new DonationModel(prisma).getAllCampaingDonations({
 			campainId: id,
 		}),
