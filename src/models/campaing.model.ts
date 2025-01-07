@@ -6,11 +6,25 @@ export class CampaingModel {
 	constructor(private db: PrismaClient) {}
 
 	async createCampaing(data: { name: string; Userid: string; goal: number }) {
-		const user = await this.db.user.findUniqueOrThrow({
+		const exitsThisCampaingAlready = await this.db.campaing.findFirst({
+			where: {
+				name: data.name,
+				Userid: data.Userid,
+			},
+		});
+
+		if (exitsThisCampaingAlready !== null) {
+			throw new ClientError("You already have this campaing created");
+		}
+		const user = await this.db.user.findUnique({
 			where: {
 				id: data.Userid,
 			},
 		});
+
+		if (!user) {
+			throw new NotFound("User not found");
+		}
 
 		if (!user.stripeID) {
 			throw new ClientError(
