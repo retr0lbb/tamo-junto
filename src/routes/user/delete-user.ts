@@ -10,7 +10,7 @@ export async function deleteUserHandler(
 	const { id: userId } = requestUser.parse(request.user);
 
 	try {
-		await UserModel.deleteUser(prisma, { id: userId });
+		await new UserModel(prisma).deleteUser({ id: userId });
 
 		return reply.status(201).send();
 	} catch (error) {

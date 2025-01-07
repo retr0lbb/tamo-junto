@@ -24,7 +24,7 @@ export async function createUserHandler(
 
 	const rashPassword = await hash(password, 10);
 
-	const insertedUser = await UserModel.createUser(prisma, {
+	const insertedUser = await new UserModel(prisma).createUser({
 		addressInfo,
 		email,
 		name,

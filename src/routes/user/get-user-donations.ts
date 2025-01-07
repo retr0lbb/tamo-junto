@@ -12,7 +12,7 @@ export async function createPrizeHandler(
 	reply: FastifyReply,
 ) {
 	const { id } = getUserDonatiosParams.parse(request.params);
-	const donations = await UserModel.gerUserDonations(prisma, { id });
+	const donations = await new UserModel(prisma).gerUserDonations({ id });
 
 	if (!donations) {
 		return reply.status(200).send([]);
