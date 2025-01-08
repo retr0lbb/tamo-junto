@@ -6,6 +6,7 @@ import donationEvent from "../events/emiters/donation.events";
 import { generatePaymentSession, calculateReducedFee } from "../lib/payment";
 import { ServerError } from "../_errors/serverError";
 import { prisma } from "../lib/prisma";
+import { turnCentsIntoMoney } from "../utils/turn-cents-into-money";
 
 export class DonationModel {
 	constructor(private db: PrismaClientDb) {}
@@ -44,11 +45,10 @@ export class DonationModel {
 
 			const totalCollectedValueOfCampaing = donationsArray.reduce(
 				(acc, donation) => {
-					return acc.plus(
-						donation.donationAmmount.minus(
-							donation.taxfeeOfDonation?.toNumber() ?? 0,
-						),
+					const taxInMoney = turnCentsIntoMoney(
+						donation.taxfeeOfDonation?.toNumber() ?? 0,
 					);
+					return acc.plus(donation.donationAmmount.minus(taxInMoney));
 				},
 				new PrismaClient.Decimal(0),
 			);
@@ -116,9 +116,7 @@ export class DonationModel {
 				totalCollectedValueOfCampaing.toNumber() + data.donnationAmmount,
 			);
 
-			console.log(paymentData.id);
-
-			return paymentData;
+			return donation;
 		} catch (error) {
 			throw new ServerError("Cannot process payment");
 		}

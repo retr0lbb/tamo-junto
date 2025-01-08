@@ -38,8 +38,6 @@ class EmailConsumer {
 					stripeID: data.stripeId,
 				},
 			});
-
-			console.log(updatedUser.id);
 		} catch (error) {
 			console.log(error);
 			throw error;

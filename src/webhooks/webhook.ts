@@ -101,6 +101,11 @@ export async function ListenWebHookHandler(
 				break;
 			}
 
+			case "charge.updated": {
+				console.log(event.data.object);
+				break;
+			}
+
 			default:
 				console.log("nao esperado⛔: ", event.type);
 				break;

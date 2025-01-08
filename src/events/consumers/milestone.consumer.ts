@@ -1,4 +1,3 @@
-import { PrismaClientValidationError } from "@prisma/client/runtime/library";
 import { ServerError } from "../../_errors/serverError";
 import { prisma } from "../../lib/prisma";
 import donationEvent from "../emiters/donation.events";
@@ -11,6 +10,7 @@ class MilestoneConsumer {
 		messageBroker.on(
 			"check-milestone-completion",
 			async (data: { campaingId: string; totalDonatedValue: number }) => {
+				console.log("Recived message processing users 💸");
 				await this.verifyIfMilestoneIsAchived({
 					campaingId: data.campaingId,
 					totalDonationValue: data.totalDonatedValue,
@@ -99,6 +99,7 @@ class MilestoneConsumer {
 		totalDonationValue,
 	}: { campaingId: string; totalDonationValue: number }) {
 		try {
+			console.log("Hey this triggered");
 			const milestonesInOrderOfCompletion = await prisma.milestone.findMany({
 				where: {
 					Campaingid: campaingId,
@@ -109,14 +110,17 @@ class MilestoneConsumer {
 				},
 			});
 
+			console.log(milestonesInOrderOfCompletion);
+			console.log(totalDonationValue);
+
 			if (milestonesInOrderOfCompletion.length <= 0) {
 				return;
 			}
 			if (milestonesInOrderOfCompletion[0].isCompleted === true) {
-				return;
+				throw new ServerError("Milestone already completed");
 			}
 			if (!milestonesInOrderOfCompletion[0]) {
-				return;
+				throw new Error("Milestone not found");
 			}
 
 			if (
