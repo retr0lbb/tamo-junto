@@ -53,14 +53,7 @@ export async function getCampaingHandler(
 				minDonation: milestone.minDonation,
 			};
 		}),
-		donations: donations.map((donate) => {
-			return {
-				id: donate.id,
-				date: donate.donationDate,
-				ammount: donate.donationAmmount,
-				completed: `${donate.status ? "Paid" : "Unpaid"}`,
-			};
-		}),
+		numberOfDonations: donations.length,
 	};
 
 	return reply.status(200).send({ data: betterCampaingObject });

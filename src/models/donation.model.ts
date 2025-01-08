@@ -116,7 +116,7 @@ export class DonationModel {
 				totalCollectedValueOfCampaing.toNumber() + data.donnationAmmount,
 			);
 
-			return donation;
+			return paymentData;
 		} catch (error) {
 			throw new ServerError("Cannot process payment");
 		}
