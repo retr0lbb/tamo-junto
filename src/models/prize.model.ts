@@ -1,23 +1,42 @@
 import type { PrismaClient } from "@prisma/client";
-
-interface createPrizePayload {
-	milestoneId: string;
-	uri: "http://localhost:3333";
-	title: string;
-	description: string | null;
-	isShippingPrize: boolean;
-}
+import { throws } from "node:assert";
+import { ClientError } from "../_errors/clientError";
+import { NotFound } from "../_errors/notFoundError";
 
 export class PrizeModel {
 	constructor(private db: PrismaClient) {}
 
-	async createPrize(data: createPrizePayload) {
+	async createPrize(data: {
+		name: string;
+		description: string;
+		prizeData?: string;
+		milestoneId: string;
+	}) {
+		const prizeWithSameUri = await this.db.prize.findFirst({
+			where: {
+				prizeData: data.prizeData,
+			},
+		});
+
+		if (prizeWithSameUri) {
+			throw new ClientError("Already exists this prize");
+		}
+
+		const milestone = await this.db.milestone.findUnique({
+			where: {
+				id: data.milestoneId,
+			},
+		});
+
+		if (!milestone) {
+			throw new NotFound("Milestone not found");
+		}
+
 		const prize = await this.db.prize.create({
 			data: {
-				description: data.description ?? "",
-				title: data.title,
-				uri: data.uri,
-				isShippingPrize: data.isShippingPrize,
+				description: data.description,
+				name: data.name,
+				prizeData: data.prizeData,
 				Milestoneid: data.milestoneId,
 			},
 		});

@@ -119,7 +119,7 @@ export async function createStripeRelatedUser({
 			stripeClient.accountLinks.create({
 				account: user.id,
 				type: "account_onboarding",
-				return_url: "",
+				return_url: "http://localhost:3333",
 				refresh_url: "http://locahost:3333",
 			}),
 		]);

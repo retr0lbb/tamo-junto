@@ -73,10 +73,9 @@ model Campaing{
 
 model Prize{
   id String @id @default(uuid())
-  title String
+  name String
   description String
-  isShippingPrize Boolean @default(false)
-  uri String
+  prizeData String? @map("prize_data") @unique
 
   Milestone Milestone? @relation(fields: [Milestoneid], references: [id], onDelete: Cascade)
   Milestoneid String?

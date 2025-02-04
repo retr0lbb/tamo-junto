@@ -5,9 +5,9 @@ import { MilestoneModel } from "../../models/milestone.model";
 import { PrizeModel } from "../../models/prize.model";
 
 export const createPrizeSchema = z.object({
-	prizeName: z.string().min(1),
-	prizeDescription: z.string().nullable(),
-	isShippingPrize: z.coerce.boolean(),
+	name: z.string().min(1),
+	description: z.string().min(12),
+	data: z.string().optional(),
 });
 const createPrizeRouteParams = z.object({
 	id: z.string().uuid(),
@@ -17,8 +17,7 @@ export async function createPrizeHandler(
 	request: FastifyRequest,
 	reply: FastifyReply,
 ) {
-	const { isShippingPrize, prizeDescription, prizeName } =
-		createPrizeSchema.parse(request.body);
+	const { data, description, name } = createPrizeSchema.parse(request.body);
 
 	const { id } = createPrizeRouteParams.parse(request.params);
 
@@ -29,11 +28,10 @@ export async function createPrizeHandler(
 	}
 
 	const prize = await new PrizeModel(prisma).createPrize({
-		isShippingPrize,
+		description,
 		milestoneId: id,
-		title: prizeName,
-		uri: "http://localhost:3333",
-		description: prizeDescription,
+		name,
+		prizeData: data,
 	});
 
 	return reply
