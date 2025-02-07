@@ -22,7 +22,7 @@ model User{
   campaing Campaing[]
   Donations Donation[]
 
-  UserAchievedMilestone UserAchievedMilestone[]
+  PrizedWinnedByUsers PrizedWinnedByUsers[]
 
   Address Address? @relation(fields: [Addressid], references: [id])
   Addressid Int?
@@ -94,14 +94,16 @@ model Milestone{
   Campaing Campaing? @relation(fields: [Campaingid], references: [id], onDelete: Cascade)
   Campaingid String?
 
-  UserAchievedMilestone UserAchievedMilestone[]
+  PrizedWinnedByUsers PrizedWinnedByUsers[]
   @@unique([objectiveAmmount, Campaingid], name: "campaing_milestone_cap")
 }
 
 
-model UserAchievedMilestone{
+model PrizedWinnedByUsers{
   id String @id @default(uuid())
   achivedMilestoneAtDate DateTime @default(now())
+  confirmedPrizeRecived Boolean @default(false)
+  prizeArriveDate DateTime?
 
   User User? @relation(fields: [Userid], references: [id], onDelete: Cascade)
   Userid String?
@@ -111,5 +113,3 @@ model UserAchievedMilestone{
 
   @@unique([Userid, Milestoneid], name: "unique_user_milestone")
 }
-
-
