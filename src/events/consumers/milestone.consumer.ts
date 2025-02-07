@@ -70,7 +70,7 @@ class MilestoneConsumer {
 				);
 
 				if (donatorTotalValue >= milestone.objectiveAmmount.toNumber()) {
-					await prisma.userAchievedMilestone.create({
+					await prisma.prizedWinnedByUsers.create({
 						data: {
 							Userid: donator.id,
 							Milestoneid: milestone.id,

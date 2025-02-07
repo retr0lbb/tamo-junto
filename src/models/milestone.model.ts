@@ -133,7 +133,7 @@ export class MilestoneModel {
 
 	async getMilestoneWinners(milestoneID: string) {
 		try {
-			const winners = await this.db.userAchievedMilestone.findMany({
+			const winners = await this.db.prizedWinnedByUsers.findMany({
 				where: {
 					Milestoneid: milestoneID,
 				},
