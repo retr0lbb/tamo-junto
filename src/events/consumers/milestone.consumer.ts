@@ -26,6 +26,7 @@ class MilestoneConsumer {
 		milestoneId: string;
 	}) {
 		try {
+			console.log("arrived at here on consumers");
 			const milestone = await prisma.milestone.findUnique({
 				where: {
 					id: data.milestoneId,
@@ -135,6 +136,8 @@ class MilestoneConsumer {
 						id: milestonesInOrderOfCompletion[0].id,
 					},
 				});
+
+				console.log("esta ativando o evento de morte 44");
 				MilestoneEvent.emitAddWinners({
 					milestoneId: milestonesInOrderOfCompletion[0].id,
 				});
