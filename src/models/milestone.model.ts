@@ -32,6 +32,7 @@ export class MilestoneModel {
 		return milestones;
 	}
 
+	// TODO: arrumar o create milestone para que ele retorne erro ao tentar criar milestone cuja o valor do objetivo ja tenha sido alcancado pela campanha seja de valores pagos ou nao pagos
 	async createMilestone(
 		data: MilestoneProps & { campaingId: string; userId: string },
 	) {

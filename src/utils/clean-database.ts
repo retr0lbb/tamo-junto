@@ -6,7 +6,7 @@ async function cleanDatabase() {
 	await prisma.milestone.deleteMany();
 	await prisma.user.deleteMany();
 	await prisma.donation.deleteMany();
-	await prisma.userAchievedMilestone.deleteMany();
+	await prisma.prizedWinnedByUsers.deleteMany();
 	await prisma.campaing.deleteMany();
 }
 

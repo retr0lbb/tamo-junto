@@ -6,11 +6,9 @@ import MilestoneEvent from "../emiters/milestone.evets";
 
 class MilestoneConsumer {
 	constructor() {
-		console.log("this listener is ready to recive messages");
 		messageBroker.on(
 			"check-milestone-completion",
 			async (data: { campaingId: string; totalDonatedValue: number }) => {
-				console.log("Recived message processing users 💸");
 				await this.verifyIfMilestoneIsAchived({
 					campaingId: data.campaingId,
 					totalDonationValue: data.totalDonatedValue,
@@ -18,7 +16,6 @@ class MilestoneConsumer {
 			},
 		);
 		messageBroker.on("add-winners", async (data: { milestoneId: string }) => {
-			console.log("Evento de morte 44 recebido vendo o porque nao foi");
 			await this.createMilestonesWinners(data);
 		});
 	}
@@ -27,7 +24,6 @@ class MilestoneConsumer {
 		milestoneId: string;
 	}) {
 		try {
-			console.log("arrived at here on consumers");
 			const milestone = await prisma.milestone.findUnique({
 				where: {
 					id: data.milestoneId,
@@ -54,7 +50,6 @@ class MilestoneConsumer {
 				where: {
 					Donations: {
 						some: {
-							// Aqui está a correção
 							Campaingid: campaing.id,
 						},
 					},
@@ -68,16 +63,13 @@ class MilestoneConsumer {
 				},
 			});
 
-			console.log("Mapping donators like this, ", donators);
 			donators.map(async (donator) => {
-				console.log("Calculando o valor total das doacoes do usuario: ");
 				const donatorTotalValue = donator.Donations.reduce(
 					(acc, item) => acc + item.donationAmmount.toNumber(),
 					0,
 				);
 
 				if (donatorTotalValue >= milestone.objectiveAmmount.toNumber()) {
-					console.log("Creating a new milestone winner");
 					await prisma.prizedWinnedByUsers.create({
 						data: {
 							Userid: donator.id,
@@ -94,18 +86,9 @@ class MilestoneConsumer {
 						`,
 						to: donator.email,
 					});
-				} else {
-					console.log(
-						donatorTotalValue,
-						"sometone",
-						milestone.objectiveAmmount.toNumber(),
-					);
-
-					console.log("❌ nao foi aqui");
 				}
 			});
 		} catch (error) {
-			console.log(error);
 			throw new ServerError(
 				"An error occured when processing milestones winners",
 			);
@@ -117,7 +100,6 @@ class MilestoneConsumer {
 		totalDonationValue,
 	}: { campaingId: string; totalDonationValue: number }) {
 		try {
-			console.log("Hey this triggered");
 			const milestonesInOrderOfCompletion = await prisma.milestone.findMany({
 				where: {
 					Campaingid: campaingId,
@@ -128,11 +110,7 @@ class MilestoneConsumer {
 				},
 			});
 
-			console.log(milestonesInOrderOfCompletion);
-			console.log("valor total das doacoes: ", totalDonationValue);
-
 			if (milestonesInOrderOfCompletion.length <= 0) {
-				console.log("is returning");
 				return;
 			}
 			if (milestonesInOrderOfCompletion[0].isCompleted === true) {
@@ -155,7 +133,6 @@ class MilestoneConsumer {
 					},
 				});
 
-				console.log("esta ativando o evento de morte 44");
 				MilestoneEvent.emitAddWinners({
 					milestoneId: milestonesInOrderOfCompletion[0].id,
 				});
