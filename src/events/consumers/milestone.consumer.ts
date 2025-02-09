@@ -53,18 +53,24 @@ class MilestoneConsumer {
 			const donators = await prisma.user.findMany({
 				where: {
 					Donations: {
-						every: {
+						some: {
+							// Aqui está a correção
 							Campaingid: campaing.id,
 						},
 					},
 				},
 				include: {
-					Donations: true,
+					Donations: {
+						where: {
+							Campaingid: campaing.id,
+						},
+					},
 				},
 			});
 
 			console.log("Mapping donators like this, ", donators);
 			donators.map(async (donator) => {
+				console.log("Calculando o valor total das doacoes do usuario: ");
 				const donatorTotalValue = donator.Donations.reduce(
 					(acc, item) => acc + item.donationAmmount.toNumber(),
 					0,
@@ -89,6 +95,12 @@ class MilestoneConsumer {
 						to: donator.email,
 					});
 				} else {
+					console.log(
+						donatorTotalValue,
+						"sometone",
+						milestone.objectiveAmmount.toNumber(),
+					);
+
 					console.log("❌ nao foi aqui");
 				}
 			});
@@ -117,7 +129,7 @@ class MilestoneConsumer {
 			});
 
 			console.log(milestonesInOrderOfCompletion);
-			console.log(totalDonationValue);
+			console.log("valor total das doacoes: ", totalDonationValue);
 
 			if (milestonesInOrderOfCompletion.length <= 0) {
 				console.log("is returning");

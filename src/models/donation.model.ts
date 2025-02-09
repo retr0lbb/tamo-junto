@@ -45,10 +45,7 @@ export class DonationModel {
 
 			const totalCollectedValueOfCampaing = donationsArray.reduce(
 				(acc, donation) => {
-					const taxInMoney = turnCentsIntoMoney(
-						donation.taxfeeOfDonation?.toNumber() ?? 0,
-					);
-					return acc.plus(donation.donationAmmount.minus(taxInMoney));
+					return acc.plus(donation.donationAmmount);
 				},
 				new PrismaClient.Decimal(0),
 			);
