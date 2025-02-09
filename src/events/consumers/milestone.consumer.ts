@@ -18,6 +18,7 @@ class MilestoneConsumer {
 			},
 		);
 		messageBroker.on("add-winners", async (data: { milestoneId: string }) => {
+			console.log("Evento de morte 44 recebido vendo o porque nao foi");
 			await this.createMilestonesWinners(data);
 		});
 	}
@@ -34,36 +35,35 @@ class MilestoneConsumer {
 			});
 
 			if (!milestone) {
-				return;
+				throw new Error("Milestone Not found");
 			}
-
+			if (!milestone.Campaingid) {
+				throw new Error("This milestone has no campaing");
+			}
 			const campaing = await prisma.campaing.findUnique({
 				where: {
-					id: milestone.Campaingid ?? "",
+					id: milestone.Campaingid,
 				},
 			});
 
 			if (!campaing) {
-				return;
+				throw new Error("Campaing not found");
 			}
 
 			const donators = await prisma.user.findMany({
 				where: {
 					Donations: {
-						some: {
+						every: {
 							Campaingid: campaing.id,
 						},
 					},
 				},
 				include: {
-					Donations: {
-						where: {
-							status: true,
-						},
-					},
+					Donations: true,
 				},
 			});
 
+			console.log("Mapping donators like this, ", donators);
 			donators.map(async (donator) => {
 				const donatorTotalValue = donator.Donations.reduce(
 					(acc, item) => acc + item.donationAmmount.toNumber(),
@@ -71,6 +71,7 @@ class MilestoneConsumer {
 				);
 
 				if (donatorTotalValue >= milestone.objectiveAmmount.toNumber()) {
+					console.log("Creating a new milestone winner");
 					await prisma.prizedWinnedByUsers.create({
 						data: {
 							Userid: donator.id,
@@ -85,10 +86,14 @@ class MilestoneConsumer {
 						milestone prize for the campaing <strong>${campaing.name}</strong></div>
 						<p>See more information on our website <a href="http://localhost:3333">link</a></p>
 						`,
+						to: donator.email,
 					});
+				} else {
+					console.log("❌ nao foi aqui");
 				}
 			});
 		} catch (error) {
+			console.log(error);
 			throw new ServerError(
 				"An error occured when processing milestones winners",
 			);
@@ -115,6 +120,7 @@ class MilestoneConsumer {
 			console.log(totalDonationValue);
 
 			if (milestonesInOrderOfCompletion.length <= 0) {
+				console.log("is returning");
 				return;
 			}
 			if (milestonesInOrderOfCompletion[0].isCompleted === true) {

@@ -98,6 +98,16 @@ export async function ListenWebHookHandler(
 						stripePaymentId: event.data.object.id,
 					},
 				});
+
+				if (!donation) {
+					return;
+				}
+
+				await prisma.donation.delete({
+					where: {
+						id: donation.id,
+					},
+				});
 				break;
 			}
 

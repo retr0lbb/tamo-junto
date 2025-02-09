@@ -17,7 +17,6 @@ class donationEvent {
 		campaingId: string,
 		totalDonatedValue: number,
 	) {
-		console.log("Emmiting check-milestone-completion please see if 💸");
 		messageBroker.emit("check-milestone-completion", {
 			campaingId,
 			totalDonatedValue,
