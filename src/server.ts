@@ -18,6 +18,11 @@ import { ErrorHandler } from "./_errors/error-handler";
 import { deleteUserRoute } from "./routes/user/delete-user";
 import { CreateStripeUserRoute } from "./routes/user/create-stripe-user";
 import { ListenWebHookRoute } from "./webhooks/webhook";
+// TODO Organize this massive import list
+
+// TODO add Type provider zod And swagger to documentate this api
+
+// TODO create more tests and testcases to code
 
 const app = fastify({
 	connectionTimeout: 10000, // 10 segundos

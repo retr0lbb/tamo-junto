@@ -6,6 +6,7 @@ export const stripeClient = new Stripe(env.STRIPE_KEY, {
 	typescript: true,
 });
 
+// TODO Fix this function using real stripe taxes for US
 export function calculateReducedFee(
 	amountInCents: number,
 	stripeFeePercentage = 0.029,
@@ -28,6 +29,7 @@ export function calculateReducedFee(
 	return { reducedFee, stripeFees };
 }
 
+// TODO Organize this code so its more readable
 export async function generatePaymentSession({
 	amount,
 	campaingOwnerStripeId,
@@ -57,15 +59,18 @@ export async function generatePaymentSession({
 					quantity: 1,
 				},
 			],
+
+			// TODO to search if it has a better way to do this
 			payment_intent_data: {
 				application_fee_amount: reducedFee,
 				transfer_data: {
 					destination: campaingOwnerStripeId,
 				},
 			},
+			// TODO see what is the porpouse of this sucess and cancel url
 			mode: "payment",
 			success_url: "https://youtube.com",
-			cancel_url: "https://e621.com",
+			cancel_url: "https://e621.net",
 		});
 
 		return paymentSession;
@@ -83,6 +88,8 @@ interface createStripeRelatedUserParams {
 	originForward: string;
 	originRefresh: string;
 }
+
+// TODO se if i can optimize this function
 
 export async function createStripeRelatedUser({
 	email,

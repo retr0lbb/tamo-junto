@@ -3,6 +3,9 @@ import { type mailOptions, sendAnEmail } from "../../lib/mailtransport";
 import { prisma } from "../../lib/prisma";
 import { messageBroker } from "../message-broker";
 
+// TODO se if i can organize this files to 2 single files or a better folder sistem
+// TODO add RabbitMQ using docker to send messages
+
 class EmailConsumer {
 	constructor() {
 		messageBroker.on("send-mail", async (data: mailOptions) => {

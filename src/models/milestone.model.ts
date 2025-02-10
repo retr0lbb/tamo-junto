@@ -26,6 +26,7 @@ export class MilestoneModel {
 
 		return milestone;
 	}
+
 	async getMilestonesByCampaingId({ id }: { id: string }) {
 		const milestones = await this.db.milestone.findMany({
 			where: {
