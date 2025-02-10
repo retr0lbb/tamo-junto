@@ -1,5 +1,7 @@
 /node_modules
 
+dev.db
+
 .env
 .env.local
 

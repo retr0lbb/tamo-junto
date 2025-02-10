@@ -14,11 +14,15 @@ export class MilestoneModel {
 	constructor(private db: PrismaClient) {}
 
 	async getMilestone({ id }: { id: string }) {
-		const milestone = await this.db.milestone.findUniqueOrThrow({
+		const milestone = await this.db.milestone.findUnique({
 			where: {
 				id,
 			},
 		});
+
+		if (!milestone) {
+			throw new ClientError("Cannot get milestone");
+		}
 
 		return milestone;
 	}
@@ -32,7 +36,6 @@ export class MilestoneModel {
 		return milestones;
 	}
 
-	// TODO: arrumar o create milestone para que ele retorne erro ao tentar criar milestone cuja o valor do objetivo ja tenha sido alcancado pela campanha seja de valores pagos ou nao pagos
 	async createMilestone(
 		data: MilestoneProps & { campaingId: string; userId: string },
 	) {
@@ -99,10 +102,12 @@ export class MilestoneModel {
 			);
 
 			if (totalDonationsSum >= data.objectiveAmmount) {
-				return new ClientError(
+				throw new ClientError(
 					"Cannot create a milestone objective that's lower than total collected money",
 				);
 			}
+
+			console.log("total sum of donations: ", totalDonationsSum);
 
 			const milestone = await this.db.milestone.create({
 				data: {
