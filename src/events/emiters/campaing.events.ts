@@ -1,4 +1,5 @@
-import { messageBroker } from "../message-broker";
+import { EventHandler } from "../event-handler";
+import { EventNames } from "../events";
 
 export interface Milestone {
 	id: string;
@@ -10,15 +11,15 @@ export interface Milestone {
 	Campaingid: string;
 }
 
-// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
-class CampaingEvent {
-	static emitMilestoneAchieved(milestone: Milestone) {
-		messageBroker.emit("milestone-achived", { milestone });
-		console.log(
-			"message Emmited to: ",
-			messageBroker.listeners("milestone-achived"),
-		);
+class CampaingEvent extends EventHandler {
+	protected setUpListeners(): void {}
+
+	emitMilestoneAchieved(milestone: Milestone) {
+		if (!milestone) {
+			throw new Error("Cannot send an empty milestone with the event");
+		}
+		this.emitEvent(EventNames.MILESTONE_ACHIEVED, milestone);
 	}
 }
 
-export default CampaingEvent;
+export default new CampaingEvent();

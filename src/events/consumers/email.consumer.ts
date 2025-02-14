@@ -1,14 +1,19 @@
 import { ClientError } from "../../_errors/clientError";
 import { type mailOptions, sendAnEmail } from "../../lib/mailtransport";
 import { prisma } from "../../lib/prisma";
-import { messageBroker } from "../message-broker";
+import { EventNames } from "../events";
+import { EventHandler } from "../event-handler";
 
-// TODO se if i can organize this files to 2 single files or a better folder sistem
 // TODO add RabbitMQ using docker to send messages
 
-class EmailConsumer {
+class EmailConsumer extends EventHandler {
+	// biome-ignore lint/complexity/noUselessConstructor: <explanation>
 	constructor() {
-		messageBroker.on("send-mail", async (data: mailOptions) => {
+		super();
+	}
+
+	protected setUpListeners(): void {
+		this.brokerInstance.on(EventNames.SEND_MAIL, async (data: mailOptions) => {
 			this.sendMail(data);
 		});
 	}
@@ -42,7 +47,7 @@ class EmailConsumer {
 				},
 			});
 		} catch (error) {
-			console.log(error);
+			this.handleError(error);
 			throw error;
 		}
 	}
