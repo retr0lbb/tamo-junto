@@ -6,7 +6,7 @@ import { PrizeModel } from "../../models/prize.model";
 import { requestUser } from "../../lib/request-user-jwt";
 import { ClientError } from "../../_errors/clientError";
 import { NotFound } from "../../_errors/notFoundError";
-import { Unautorized } from "../../_errors/unautorized";
+import { Unautorized } from "../../_errors/unauthorized";
 import { ServerError } from "../../_errors/serverError";
 
 const confirmPrizeRecievedParams = z.object({

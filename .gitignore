@@ -5,7 +5,6 @@ dev.db
 .env
 .env.local
 
-
 .vscode
 dist
 build
@@ -17,3 +16,5 @@ server.csr
 server.key
 
 prisma/dev.db
+
+generated/
