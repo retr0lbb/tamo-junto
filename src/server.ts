@@ -1,6 +1,6 @@
 import { fastify } from "fastify";
 import { createUserRoute } from "./routes/user/create-user";
-import { createCampaingRoute } from "./routes/campaing/create-campaing";
+import {campaignModule} from "./http/routes/campaing.routes"
 import { createMilestoneRoute } from "./routes/milestones/create-milestone-for-campaing";
 import { createDonationRoute } from "./routes/donations/donate-to-campaing";
 import { getCampaingRoute } from "./routes/campaing/get-campaing";
@@ -18,6 +18,7 @@ import { ErrorHandler } from "./_errors/error-handler";
 import { deleteUserRoute } from "./routes/user/delete-user";
 import { CreateStripeUserRoute } from "./routes/user/create-stripe-user";
 import { ListenWebHookRoute } from "./webhooks/webhook";
+import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
 // TODO Organize this massive import list
 
 // TODO add Type provider zod And swagger to documentate this api
@@ -39,15 +40,20 @@ app.register(import("fastify-raw-body"), {
 	runFirst: true,
 });
 app.register(plugin);
-app.get("/", (request, reply) => {
+
+app.setSerializerCompiler(serializerCompiler)
+app.setValidatorCompiler(validatorCompiler)
+
+
+app.get("/", (_, reply) => {
 	reply.send("Api funcionando com sucesso");
 });
 
 app.setErrorHandler(ErrorHandler);
 
+app.register(campaignModule)
 app.register(createUserRoute);
 app.register(loginUserRoute);
-app.register(createCampaingRoute);
 app.register(createMilestoneRoute);
 app.register(createDonationRoute);
 app.register(getCampaingRoute);
