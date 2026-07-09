@@ -2,26 +2,26 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
 import z from "zod";
 import { requestUser } from "../../lib/request-user-jwt";
-import { CampaingModel } from "../../models/campaing.model";
+import { CampaignModel } from "../../models/campaing.model";
 
-const updateCampaingRouteParams = z.object({
+const updateCampaignRouteParams = z.object({
 	id: z.string().uuid(),
 });
 
-const updateCampaingSchema = z.object({
+const updateCampaignSchema = z.object({
 	name: z.string(),
 	goal: z.number(),
 });
 
-export async function updateCampaingHandler(
+export async function updateCampaignHandler(
 	request: FastifyRequest,
 	reply: FastifyReply,
 ) {
-	const { id } = updateCampaingRouteParams.parse(request.params);
+	const { id } = updateCampaignRouteParams.parse(request.params);
 	const { id: userId } = requestUser.parse(request.user);
-	const { goal, name } = updateCampaingSchema.parse(request.body);
+	const { goal, name } = updateCampaignSchema.parse(request.body);
 
-	const campaing = await new CampaingModel(prisma).verifyIfCampaingExists({
+	const campaing = await new CampaignModel(prisma).verifyIfCampaingExists({
 		id,
 	});
 
@@ -35,7 +35,7 @@ export async function updateCampaingHandler(
 			.send({ message: "Only the creator of this campaing can update it" });
 	}
 
-	const result = await new CampaingModel(prisma).updateCampaing({
+	const result = await new CampaignModel(prisma).updateCampaing({
 		goal,
 		id,
 		name,
@@ -46,12 +46,12 @@ export async function updateCampaingHandler(
 		.send({ message: "your campaing was updated", data: result });
 }
 
-export async function updateCampaingRoute(app: FastifyInstance) {
+export async function updateCampaignRoute(app: FastifyInstance) {
 	app.put(
 		"/campaing/:id",
 		{
 			onRequest: [app.authenticate],
 		},
-		updateCampaingHandler,
+		updateCampaignHandler,
 	);
 }

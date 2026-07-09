@@ -1,14 +1,9 @@
 import { fastify } from "fastify";
 import { createUserRoute } from "./routes/user/create-user";
-import {campaignModule} from "./http/routes/campaing.routes"
 import { createMilestoneRoute } from "./routes/milestones/create-milestone-for-campaing";
 import { createDonationRoute } from "./routes/donations/donate-to-campaing";
-import { getCampaingRoute } from "./routes/campaing/get-campaing";
 import { createPrizeRoute } from "./routes/prize/add-prize-to-milestone";
 import { loginUserRoute } from "./routes/user/login-user";
-import { listCampaingsRoute } from "./routes/campaing/list-campaings";
-import { deleteCampaingRoute } from "./routes/campaing/end-campaing";
-import { updateCampaingRoute } from "./routes/campaing/update-campaing";
 import { getMilestoneWinnersRoute } from "./routes/milestones/get-milestone-winners";
 import plugin from "./lib/jwt-plugin";
 import "./events/consumers/milestone.consumer";
@@ -19,6 +14,7 @@ import { deleteUserRoute } from "./routes/user/delete-user";
 import { CreateStripeUserRoute } from "./routes/user/create-stripe-user";
 import { ListenWebHookRoute } from "./webhooks/webhook";
 import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
+import { campaignModule } from "./routes/campaign";
 // TODO Organize this massive import list
 
 // TODO add Type provider zod And swagger to documentate this api
@@ -52,15 +48,12 @@ app.get("/", (_, reply) => {
 app.setErrorHandler(ErrorHandler);
 
 app.register(campaignModule)
+
 app.register(createUserRoute);
 app.register(loginUserRoute);
 app.register(createMilestoneRoute);
 app.register(createDonationRoute);
-app.register(getCampaingRoute);
 app.register(createPrizeRoute);
-app.register(listCampaingsRoute);
-app.register(deleteCampaingRoute);
-app.register(updateCampaingRoute);
 app.register(getMilestoneWinnersRoute);
 app.register(getUserDonatiosRoute);
 app.register(deleteUserRoute);

@@ -1,4 +1,4 @@
-import type { PrismaClient as PrismaClientDb } from "@prisma/client";
+import type { PrismaClient as PrismaClientDb } from "../../generated/prisma/client";
 import { Prisma as PrismaClient } from "@prisma/client";
 import { NotFound } from "../_errors/notFoundError";
 import { ClientError } from "../_errors/clientError";

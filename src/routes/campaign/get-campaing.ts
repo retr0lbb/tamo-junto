@@ -1,8 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
 import z from "zod";
-import { Prisma as PrismaClient } from "@prisma/client";
-import { CampaingModel } from "../../models/campaing.model";
+import { CampaignModel } from "../../models/campaing.model";
 import { MilestoneModel } from "../../models/milestone.model";
 import { DonationModel } from "../../models/donation.model";
 
@@ -10,13 +9,13 @@ const getCampaingRouteParams = z.object({
 	id: z.string().uuid(),
 });
 
-export async function getCampaingHandler(
+export async function getCampaignHandler(
 	request: FastifyRequest,
 	reply: FastifyReply,
 ) {
 	const { id } = getCampaingRouteParams.parse(request.params);
 
-	const campaing = await new CampaingModel(prisma).getCampaing({ id });
+	const campaing = await new CampaignModel(prisma).getCampaing({ id });
 
 	if (!campaing) {
 		return reply.status(404).send({ message: "Campaing not found" });
@@ -59,6 +58,6 @@ export async function getCampaingHandler(
 	return reply.status(200).send({ data: betterCampaingObject });
 }
 
-export async function getCampaingRoute(app: FastifyInstance) {
-	app.get("/campaing/:id", getCampaingHandler);
+export async function getCampaignRoute(app: FastifyInstance) {
+	app.get("/campaing/:id", getCampaignHandler);
 }

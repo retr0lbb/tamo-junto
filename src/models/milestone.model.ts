@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "../../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { NotFound } from "../_errors/notFoundError";
 import { ClientError } from "../_errors/clientError";

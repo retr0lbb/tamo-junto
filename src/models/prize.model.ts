@@ -1,5 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
-import { throws } from "node:assert";
+import type { PrismaClient } from "../../generated/prisma/client";
 import { ClientError } from "../_errors/clientError";
 import { NotFound } from "../_errors/notFoundError";
 

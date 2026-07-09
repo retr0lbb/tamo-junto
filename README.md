@@ -53,3 +53,5 @@ npm run dev
 ## consideracoes finais
 esse projeto esta sendo bem desafiador para mim ao mesmo tempo estou aprendendo muito com ele principalmente sobre logicas de pagamento que ate o inicio do projeto eu nao achei que seria tao complexo quanto é esse sistema de pagamento mas esse projeto eu irei completar o deploy principalmente depois de superar a minha preguiça de criar uma conta de pagamentos na google cloud e aprender mais sobre deploy.
 
+
+

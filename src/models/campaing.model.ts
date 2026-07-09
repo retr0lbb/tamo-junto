@@ -1,11 +1,11 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "../../generated/prisma/client";
 import { ClientError } from "../_errors/clientError";
 import { NotFound } from "../_errors/notFoundError";
 
-export class CampaingModel {
+export class CampaignModel {
 	constructor(private db: PrismaClient) {}
 
-	async createCampaing(data: { name: string; Userid: string; goal: number }) {
+	async createCampaign(data: { name: string; Userid: string; goal: number }) {
 		const exitsThisCampaingAlready = await this.db.campaing.findFirst({
 			where: {
 				name: data.name,
@@ -43,19 +43,19 @@ export class CampaingModel {
 		return result;
 	}
 
-	async deleteCampaing(data: { id: string; userId: string }) {
-		const campaing = await this.db.campaing.findUnique({
+	async deleteCampaign(data: { id: string; userId: string }) {
+		const campaign = await this.db.campaing.findUnique({
 			where: {
 				id: data.id,
 			},
 			select: { Userid: true },
 		});
 
-		if (!campaing) {
+		if (!campaign) {
 			throw new NotFound("Campaing not found");
 		}
 
-		if (data.userId !== campaing.Userid) {
+		if (data.userId !== campaign.Userid) {
 			throw new ClientError(
 				"Cannot delete a campaing thats not created by you",
 			);

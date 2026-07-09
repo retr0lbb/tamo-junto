@@ -1,24 +1,20 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../../lib/prisma";
 import z from "zod";
-import { CampaingModel } from "../../models/campaing.model";
+import { CampaignModel } from "../../models/campaing.model";
 
 const queryParams = z.object({
-	page: z
-		.string()
-		.transform((val) => Number.parseInt(val, 10))
-		.optional()
-		.default("0"),
+	page: z.coerce.number().default(10),
 	user: z.string().uuid().optional(),
 });
 
-export async function listCampaingsHandler(
+export async function listCampaignsHandler(
 	request: FastifyRequest,
 	reply: FastifyReply,
 ) {
 	const { user, page } = queryParams.parse(request.query);
 
-	const campaings = await new CampaingModel(prisma).getCampaingsByPage({
+	const campaings = await new CampaignModel(prisma).getCampaingsByPage({
 		page,
 		user,
 	});
@@ -30,6 +26,6 @@ export async function listCampaingsHandler(
 	return reply.status(200).send({ data: campaings });
 }
 
-export async function listCampaingsRoute(app: FastifyInstance) {
-	app.get("/campaing", listCampaingsHandler);
+export async function listCampaignsRoute(app: FastifyInstance) {
+	app.get("/campaing", listCampaignsHandler);
 }

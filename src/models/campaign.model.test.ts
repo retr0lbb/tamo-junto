@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { CampaingModel } from "./campaing.model";
+import { CampaignModel } from "./campaing.model";
 import type { prisma } from "../lib/prisma";
 import { ClientError } from "../_errors/clientError";
 import { NotFound } from "../_errors/notFoundError";
@@ -40,7 +40,7 @@ describe("Campaing Model Testcase Create", () => {
 	});
 
 	it("Should create campaing sucessfully", async () => {
-		const createdCampaing = await new CampaingModel(prismaMock).createCampaing({
+		const createdCampaing = await new CampaignModel(prismaMock).createCampaign({
 			goal: 1000,
 			name: "Test Campaing",
 			Userid: "user-123",
@@ -63,7 +63,7 @@ describe("Campaing Model Testcase Create", () => {
 		} as CampaingProps);
 
 		expect(() => {
-			new CampaingModel(prismaMock).createCampaing({
+			new CampaignModel(prismaMock).createCampaign({
 				name: "Test Campaing",
 				goal: 1000,
 				Userid: "user-123",
@@ -81,7 +81,7 @@ describe("Campaing Model Testcase Create", () => {
 		});
 
 		expect(() => {
-			new CampaingModel(prismaMock).createCampaing({
+			new CampaignModel(prismaMock).createCampaign({
 				name: "Test Campaing",
 				goal: 1000,
 				Userid: "user-123",
@@ -93,7 +93,7 @@ describe("Campaing Model Testcase Create", () => {
 		prismaMock.user.findUnique = vi.fn().mockResolvedValue(null);
 
 		expect(() => {
-			new CampaingModel(prismaMock).createCampaing({
+			new CampaignModel(prismaMock).createCampaign({
 				name: "Test Campaing",
 				goal: 1000,
 				Userid: "user-123",
